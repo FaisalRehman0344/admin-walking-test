@@ -15,6 +15,29 @@
     the `--base-href` argument provided to `flutter build`.
   -->
   <base href="$FLUTTER_BASE_HREF">
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+  
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtPbdO93x1fqCOlmHBD4dPe_05wYCdCe4",
+      authDomain: "admin-walking-challange.firebaseapp.com",
+      projectId: "admin-walking-challange",
+      storageBucket: "admin-walking-challange.appspot.com",
+      messagingSenderId: "734321977225",
+      appId: "1:734321977225:web:cad81dd4242809d6ade358"
+    };
+  
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+  </script>
+  
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
@@ -29,7 +52,7 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>web_routing_app</title>
+  <title>Admin Walking Challenge</title>
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
