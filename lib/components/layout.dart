@@ -18,7 +18,7 @@ class NavLayout extends StatefulWidget {
 class _NavLayoutState extends State<NavLayout> {
   List menus = [
     {"title": "Dashboard", "width": 5, "url": "/dashboard"},
-    {"title": "Users", "width": 0},
+    {"title": "Users", "width": 0, "url":"/users"},
     {"title": "Challenges", "width": 0 ,"url":"/challenges"},
     {"title": "Settings", "width": 0},
     {"title": "Store", "width": 0, "url": "/store"}

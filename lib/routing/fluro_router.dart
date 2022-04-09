@@ -5,14 +5,10 @@ import 'package:web_routing_app/screens/dashboard.dart';
 import 'package:web_routing_app/screens/home.dart';
 import 'package:web_routing_app/screens/login.dart';
 import 'package:web_routing_app/screens/store.dart';
+import 'package:web_routing_app/screens/users.dart';
 
 class Flurorouter {
   static final FluroRouter router = FluroRouter();
-
-  static final _homeHandlar = Handler(
-      handlerFunc: (BuildContext? context, Map<String, dynamic> params) {
-    return const HomeScreen();
-  });
 
   static final _loginHandler = Handler(
       handlerFunc: (BuildContext? context, Map<String, dynamic> params) {
@@ -34,17 +30,23 @@ class Flurorouter {
     return const StoreScreen();
   });
 
+  static final _usersHandler = Handler(
+      handlerFunc: (BuildContext? context, Map<String, dynamic> params) {
+    return const UsersScreen();
+  });
+
   static void routeSettings() {
     // router.define("/", handler: _homeHandlar);
     router.define("/dashboard", handler: _dashboardHandler);
     router.define("/login", handler: _loginHandler);
     router.define("/store", handler: _storeHandler);
     router.define("/challenges", handler: _challengesHandler);
+    router.define("/users", handler: _usersHandler);
 
     //Handler for unknown route
     router.notFoundHandler = Handler(
         handlerFunc: (BuildContext? context, Map<String, dynamic> params) {
-      return const HomeScreen();
+      return const DashboardScreen();
     });
   }
 }

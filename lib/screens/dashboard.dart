@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:web_routing_app/components/layout.dart';
 import 'package:web_routing_app/utils/mainColors.dart';
@@ -37,7 +36,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       result += "$index:$element\n";
       index++;
     });
-    return result.substring(0,78);
+    return result.substring(0, 78);
   }
 
   @override
@@ -49,7 +48,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
     return NavLayout(
       url: "/dashboard",
       filterWidget: Row(
@@ -148,8 +146,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         NumberFormat.compact().format(4500000)),
                     detailsCard("TOP TEN STEPS \nCHALLANGE(MORE WINS)",
                         formatTopTen(topTen),
-                        gap: 10,
-                        height: 350, fontSize: 22),
+                        gap: 10, height: 350, fontSize: 22),
                   ],
                 ),
               ),
@@ -180,7 +177,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       fontFamily: "Segoe UI",
                       color: borderColor,
                       fontSize: 16,
-                      fontWeight: FontWeight.bold),
+                      fontWeight: FontWeight.w700),
                 ),
                 Visibility(
                   visible: title == "USERS",
@@ -190,7 +187,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       "57 countries",
                       style: TextStyle(
                           color: Colors.black,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                           fontSize: 14),
                     ),
                   ),
@@ -205,7 +202,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 value,
                 style: TextStyle(
                   color: Colors.black,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w700,
                   fontSize: fontSize ?? 24,
                 ),
               ),

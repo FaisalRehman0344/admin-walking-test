@@ -85,6 +85,8 @@ flutter:
     - family: Segoe UI
       fonts:
         - asset: assets/fonts/SEGOEUI.TTF
+        - asset: assets/fonts/SEGEOUI_BOLD.ttf
+          weight: 700
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro

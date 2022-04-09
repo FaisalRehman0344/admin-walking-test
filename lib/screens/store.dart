@@ -341,7 +341,8 @@ class _StoreScreenState extends State<StoreScreen> {
                                   ),
                                 ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Container(
@@ -352,19 +353,31 @@ class _StoreScreenState extends State<StoreScreen> {
                                             color: primaryColor,
                                             width: 75.w,
                                             height: 75.w,
-                                            child: Image.asset("assets/images/walking_logo.png"),
+                                            child: Image.asset(
+                                                "assets/images/walking_logo.png"),
                                           ),
                                           Container(
                                             margin: EdgeInsets.only(left: 10),
                                             height: 50,
                                             child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
                                               children: [
-                                                Text(cardData[index]["name"],style: TextStyle(fontSize: 14,color: drawerText),),
-                                                SizedBox(height: 5.h,),
+                                                Text(
+                                                  cardData[index]["name"],
+                                                  style: TextStyle(
+                                                      fontSize: 14,
+                                                      color: drawerText),
+                                                ),
+                                                SizedBox(
+                                                  height: 5.h,
+                                                ),
                                                 Container(
-                                                  margin: EdgeInsets.only(bottom: 10),
+                                                  margin: EdgeInsets.only(
+                                                      bottom: 10),
                                                   height: 20,
                                                   child: ListView.builder(
                                                     shrinkWrap: true,
@@ -391,7 +404,15 @@ class _StoreScreenState extends State<StoreScreen> {
                                         ],
                                       ),
                                     ),
-                                    Text("Rs "+cardData[index]["price"].toString()+"/=",style: TextStyle(fontWeight: FontWeight.bold,color: drawerText,fontSize: 10),)
+                                    Text(
+                                      "Rs " +
+                                          cardData[index]["price"].toString() +
+                                          "/=",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          color: drawerText,
+                                          fontSize: 10),
+                                    )
                                   ],
                                 ),
                               );
@@ -410,4 +431,3 @@ class _StoreScreenState extends State<StoreScreen> {
     );
   }
 }
-

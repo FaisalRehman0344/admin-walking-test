@@ -4,162 +4,155 @@ import 'package:intl/intl.dart';
 import 'package:web_routing_app/components/layout.dart';
 import 'package:web_routing_app/utils/mainColors.dart';
 
-class ChallengesScreen extends StatefulWidget {
-  const ChallengesScreen({Key? key}) : super(key: key);
+class UsersScreen extends StatefulWidget {
+  const UsersScreen({Key? key}) : super(key: key);
 
   @override
-  State<ChallengesScreen> createState() => _ChallengesScreenState();
+  State<UsersScreen> createState() => _UsersScreenState();
 }
 
-class _ChallengesScreenState extends State<ChallengesScreen> {
+class _UsersScreenState extends State<UsersScreen> {
   String? statusValue;
   String? filterValue;
   TextEditingController fromController = TextEditingController();
   TextEditingController toController = TextEditingController();
 
-  List<String> filters = ["Custom", "By Status"];
+  List<String> filters = ["By Time", "By Status"];
   List<String> filterStatus = ["Completed", "In Progress"];
-  List data = [
+  List columns = [
     {
-      "challenger": "German gods",
-      "opponent": "Simply Minds",
-      "totalTime": "30 sec",
-      "coin": "50,000",
-      "status": "Completed",
-      "winner": "Challenger"
+      "title": "View",
+      "gap": 100.w,
     },
     {
-      "challenger": "German gods",
-      "opponent": "Simply Minds",
-      "totalTime": "60 sec",
-      "coin": "50,000",
-      "status": "In Progress",
-      "winner": "--"
+      "title": "Full Name",
+      "gap": 130.w,
+    },
+    {
+      "title": "Country",
+      "gap": 100.w,
+    },
+    {
+      "title": "City",
+      "gap": 100.w,
+    },
+    {
+      "title": "Email",
+      "gap": 160.w,
+    },
+    {
+      "title": "Chart No",
+      "gap": 100.w,
+    },
+    {
+      "title": "Level",
+      "gap": 100.w,
+    },
+    {
+      "title": "Total Steps",
+      "gap": 100.w,
+    },
+    {
+      "title": "Active/Suspend",
+      "gap": 100.w,
+    }
+  ];
+
+  List data = [
+    {
+      "fullName": "xxxxxxxxxxx",
+      "country": "Pakistan",
+      "city": "Karachi",
+      "email": "xxxxxxxxxxxxxxxxxx",
+      "chartNo": "23",
+      "level": "5",
+      "totalSteps": "103,000",
+      "status": true
+    },
+    {
+      "fullName": "xxxxxxxxxxx",
+      "country": "Pakistan",
+      "city": "Karachi",
+      "email": "xxxxxxxxxxxxxxxxxx",
+      "chartNo": "23",
+      "level": "5",
+      "totalSteps": "103,000",
+      "status": true
+    },
+    {
+      "fullName": "xxxxxxxxxxx",
+      "country": "Pakistan",
+      "city": "Karachi",
+      "email": "xxxxxxxxxxxxxxxxxx",
+      "chartNo": "23",
+      "level": "5",
+      "totalSteps": "103,000",
+      "status": true
     }
   ];
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
     return NavLayout(
-      url: "/challenges",
+      url: "/users",
       child: Container(
-        width: size.width * .5,
-        margin: EdgeInsets.only(left: 15, top: 20),
+        margin: EdgeInsets.only(left: 25.w, top: 40.h),
+        width: 0.75.sw,
         child: Column(
           children: [
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 15),
-              height: 40,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Challenger",
-                    style: TextStyle(
+              width: 0.75.sw,
+              height: 50.h,
+              child: ListView.builder(
+                shrinkWrap: true,
+                scrollDirection: Axis.horizontal,
+                itemCount: columns.length,
+                itemBuilder: (context, index) {
+                  return Container(
+                    margin: EdgeInsets.only(right: columns[index]["gap"]),
+                    child: Text(
+                      columns[index]["title"],
+                      style: TextStyle(
                         color: drawerText,
                         fontSize: 16.sp,
-                        fontWeight: FontWeight.w700),
-                  ),
-                  Text(
-                    "Opponent",
-                    style: TextStyle(
-                        color: drawerText,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700),
-                  ),
-                  Text(
-                    "Total Time",
-                    style: TextStyle(
-                        color: drawerText,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700),
-                  ),
-                  Text(
-                    "Coin",
-                    style: TextStyle(
-                        color: drawerText,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700),
-                  ),
-                  Text(
-                    "Status",
-                    style: TextStyle(
-                        color: drawerText,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700),
-                  ),
-                  Text(
-                    "Winner",
-                    style: TextStyle(
-                        color: drawerText,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700),
-                  ),
-                ],
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-            ListView.builder(
-              shrinkWrap: true,
-              itemCount: data.length,
-              itemBuilder: (context, index) {
-                return Container(
-                  padding: EdgeInsets.only(left: 15),
-                  height: 40,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Container(
+              width: 0.75.sw,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: data.length,
+                itemBuilder: (context, index) {
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Container(
-                        width: 120.w,
-                        child: Text(
-                          data[index]["challenger"],
-                          style: TextStyle(
-                            color: drawerText,
-                            fontSize: 16.sp,
-                          ),
+                        alignment: Alignment.centerLeft,
+                        margin: EdgeInsets.only(right: 102.w),
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: GestureDetector(
+                              onTap: () {},
+                              child: Icon(
+                                Icons.remove_red_eye,
+                                size: 33.w,
+                                color: cardTextColor,
+                              )),
                         ),
                       ),
                       Container(
-                        margin: EdgeInsets.only(left: 26),
-                        width: 120.w,
-                        child: Text(
-                          data[index]["opponent"],
-                          style: TextStyle(
-                            color: drawerText,
-                            fontSize: 16.sp,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(left: 27),
-                        alignment: Alignment.center,
-                        width: 60.w,
-                        child: Text(
-                          data[index]["totalTime"],
-                          style: TextStyle(
-                            color: drawerText,
-                            fontSize: 16.sp,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(left: 50),
-                        alignment: Alignment.center,
-                        width: 70.w,
-                        child: Text(
-                          data[index]["coin"],
-                          style: TextStyle(
-                            color: drawerText,
-                            fontSize: 16.sp,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(left: 30),
-                        alignment: Alignment.center,
+                        alignment: Alignment.centerLeft,
                         width: 100.w,
+                        height: 50.h,
+                        margin: EdgeInsets.only(right: 100.w),
                         child: Text(
-                          data[index]["status"],
+                          data[index]["fullName"],
                           style: TextStyle(
                             color: drawerText,
                             fontSize: 16.sp,
@@ -167,22 +160,100 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                         ),
                       ),
                       Container(
-                        padding: EdgeInsets.only(left: 25),
-                        alignment: Alignment.center,
-                        width: 120.w,
+                        alignment: Alignment.centerLeft,
+                        width: 100.w,
+                        height: 50.h,
+                        margin: EdgeInsets.only(right: 55.w),
                         child: Text(
-                          data[index]["winner"],
+                          data[index]["country"],
                           style: TextStyle(
                             color: drawerText,
                             fontSize: 16.sp,
                           ),
                         ),
                       ),
+                      Container(
+                        alignment: Alignment.centerLeft,
+                        width: 100.w,
+                        height: 50.h,
+                        margin: EdgeInsets.only(right: 28.w),
+                        child: Text(
+                          data[index]["city"],
+                          style: TextStyle(
+                            color: drawerText,
+                            fontSize: 16.sp,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        alignment: Alignment.centerLeft,
+                        width: 150.w,
+                        height: 50.h,
+                        margin: EdgeInsets.only(right: 70.w),
+                        child: Text(
+                          data[index]["email"],
+                          style: TextStyle(
+                            color: drawerText,
+                            fontSize: 16.sp,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        alignment: Alignment.centerLeft,
+                        width: 100.w,
+                        height: 50.h,
+                        margin: EdgeInsets.only(right: 55.w),
+                        child: Text(
+                          data[index]["chartNo"],
+                          style: TextStyle(
+                            color: drawerText,
+                            fontSize: 16.sp,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        alignment: Alignment.centerLeft,
+                        width: 100.w,
+                        height: 50.h,
+                        margin: EdgeInsets.only(right: 33.w),
+                        child: Text(
+                          data[index]["level"],
+                          style: TextStyle(
+                            color: drawerText,
+                            fontSize: 16.sp,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        alignment: Alignment.centerLeft,
+                        width: 100.w,
+                        height: 50.h,
+                        margin: EdgeInsets.only(right: 70.w),
+                        child: Text(
+                          data[index]["totalSteps"],
+                          style: TextStyle(
+                            color: drawerText,
+                            fontSize: 16.sp,
+                          ),
+                        ),
+                      ),
+                      Container(
+                          alignment: Alignment.centerLeft,
+                          width: 100.w,
+                          height: 50.h,
+                          child: Switch(
+                            value: data[index]["status"],
+                            onChanged: (val) {
+                              setState(() {
+                                data[index]["status"] = val;
+                              });
+                            },
+                          )),
                     ],
-                  ),
-                );
-              },
-            )
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -232,8 +303,8 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                     }),
           ),
           filterDateField(
-              context, "From", fromController, filterValue == "Custom"),
-          filterDateField(context, "To", toController, filterValue == "Custom"),
+              context, "From", fromController, filterValue == "By Time"),
+          filterDateField(context, "To", toController, filterValue == "By Time"),
           Visibility(
             visible: filterValue == "By Status",
             child: Container(
