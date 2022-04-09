@@ -46,7 +46,7 @@ class AuthService {
 
   static void checkLogin(BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool login = await prefs.getBool("auth") ?? false;
+    bool login = prefs.getBool("auth") ?? false;
     if (!login) Flurorouter.router.navigateTo(context, "/login");
   }
 }

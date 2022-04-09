@@ -1,0 +1,346 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
+import 'package:web_routing_app/components/layout.dart';
+import 'package:web_routing_app/utils/mainColors.dart';
+
+class ChallengesScreen extends StatefulWidget {
+  const ChallengesScreen({Key? key}) : super(key: key);
+
+  @override
+  State<ChallengesScreen> createState() => _ChallengesScreenState();
+}
+
+class _ChallengesScreenState extends State<ChallengesScreen> {
+  String? statusValue;
+  String? filterValue;
+  TextEditingController fromController = TextEditingController();
+  TextEditingController toController = TextEditingController();
+
+  List<String> filters = ["Custom", "By Status"];
+  List<String> filterStatus = ["Completed", "In Progress"];
+  List data = [
+    {
+      "challenger": "German gods",
+      "opponent": "Simply Minds",
+      "totalTime": "30 sec",
+      "coin": "50,000",
+      "status": "Completed",
+      "winner": "Challenger"
+    },
+    {
+      "challenger": "German gods",
+      "opponent": "Simply Minds",
+      "totalTime": "60 sec",
+      "coin": "50,000",
+      "status": "In Progress",
+      "winner": "--"
+    }
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
+    return NavLayout(
+      url: "/challenges",
+      child: Container(
+        width: size.width * .5,
+        margin: EdgeInsets.only(left: 15, top: 20),
+        child: Column(
+          children: [
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 15),
+              height: 40,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Challenger",
+                    style: TextStyle(
+                        color: drawerText,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    "Opponent",
+                    style: TextStyle(
+                        color: drawerText,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    "Total Time",
+                    style: TextStyle(
+                        color: drawerText,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    "Coin",
+                    style: TextStyle(
+                        color: drawerText,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    "Status",
+                    style: TextStyle(
+                        color: drawerText,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    "Winner",
+                    style: TextStyle(
+                        color: drawerText,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            ListView.builder(
+              shrinkWrap: true,
+              itemCount: data.length,
+              itemBuilder: (context, index) {
+                return Container(
+                  padding: EdgeInsets.only(left: 15),
+                  height: 40,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: 120.w,
+                        child: Text(
+                          data[index]["challenger"],
+                          style: TextStyle(
+                            color: drawerText,
+                            fontSize: 16.sp,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        margin: EdgeInsets.only(left: 26),
+                        width: 120.w,
+                        child: Text(
+                          data[index]["opponent"],
+                          style: TextStyle(
+                            color: drawerText,
+                            fontSize: 16.sp,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        margin: EdgeInsets.only(left: 27),
+                        alignment: Alignment.center,
+                        width: 60.w,
+                        child: Text(
+                          data[index]["totalTime"],
+                          style: TextStyle(
+                            color: drawerText,
+                            fontSize: 16.sp,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        margin: EdgeInsets.only(left: 50),
+                        alignment: Alignment.center,
+                        width: 70.w,
+                        child: Text(
+                          data[index]["coin"],
+                          style: TextStyle(
+                            color: drawerText,
+                            fontSize: 16.sp,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        margin: EdgeInsets.only(left: 30),
+                        alignment: Alignment.center,
+                        width: 100.w,
+                        child: Text(
+                          data[index]["status"],
+                          style: TextStyle(
+                            color: drawerText,
+                            fontSize: 16.sp,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.only(left: 25),
+                        alignment: Alignment.center,
+                        width: 120.w,
+                        child: Text(
+                          data[index]["winner"],
+                          style: TextStyle(
+                            color: drawerText,
+                            fontSize: 16.sp,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            )
+          ],
+        ),
+      ),
+      filterWidget: Row(
+        children: [
+          Container(
+            width: 150,
+            child: DropdownButton<String>(
+                focusColor: Colors.transparent,
+                underline: Divider(height: 1, color: Colors.white),
+                iconEnabledColor: Colors.white,
+                dropdownColor: Colors.white,
+                autofocus: false,
+                itemHeight: 50,
+                style: TextStyle(color: Colors.white),
+                hint: Text(
+                  filterValue ?? "Filters",
+                  style: TextStyle(color: Colors.white),
+                ),
+                isExpanded: true,
+                items: filters
+                    .map<DropdownMenuItem<String>>((e) => DropdownMenuItem(
+                          value: e,
+                          child: Container(
+                            decoration: BoxDecoration(
+                                border: Border(
+                                    bottom: BorderSide(
+                                        color: Colors.black, width: 1))),
+                            width: double.infinity,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  e,
+                                  style: TextStyle(color: Colors.black),
+                                ),
+                                Icon(Icons.arrow_right_outlined),
+                              ],
+                            ),
+                          ),
+                        ))
+                    .toList(),
+                onChanged: (val) => {
+                      setState(() {
+                        filterValue = val;
+                      })
+                    }),
+          ),
+          filterDateField(
+              context, "From", fromController, filterValue == "Custom"),
+          filterDateField(context, "To", toController, filterValue == "Custom"),
+          Visibility(
+            visible: filterValue == "By Status",
+            child: Container(
+              margin: EdgeInsets.only(left: 20),
+              width: 100,
+              child: DropdownButton<String>(
+                  focusColor: Colors.transparent,
+                  underline: Divider(height: 1, color: Colors.white),
+                  iconEnabledColor: Colors.white,
+                  dropdownColor: Colors.white,
+                  autofocus: false,
+                  itemHeight: 50,
+                  style: TextStyle(color: Colors.white),
+                  hint: Text(
+                    statusValue ?? "Status",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  isExpanded: true,
+                  items: filterStatus
+                      .map<DropdownMenuItem<String>>((e) => DropdownMenuItem(
+                            value: e,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                  border: Border(
+                                      bottom: BorderSide(
+                                          color: Colors.black, width: 1))),
+                              width: double.infinity,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    e,
+                                    style: TextStyle(color: Colors.black),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ))
+                      .toList(),
+                  onChanged: (val) => {
+                        setState(() {
+                          statusValue = val;
+                        })
+                      }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget filterDateField(BuildContext context, String text,
+      TextEditingController controller, bool condition) {
+    return Visibility(
+      visible: condition,
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 13, horizontal: 15),
+        width: 150,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              text,
+              style: TextStyle(color: Colors.white, fontSize: 10),
+            ),
+            Expanded(
+              child: TextField(
+                style: TextStyle(color: Colors.white),
+                controller: controller,
+                decoration: InputDecoration(
+                  hintText: "yyyy/mm/dd",
+                  hintStyle: TextStyle(color: Colors.white),
+                  contentPadding: EdgeInsets.only(bottom: 20, left: 30),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                ),
+                readOnly: true,
+                onTap: () async {
+                  DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime.now());
+
+                  if (pickedDate != null) {
+                    String formattedDate =
+                        DateFormat('yyyy-MM-dd').format(pickedDate);
+                    setState(() {
+                      controller.text = formattedDate;
+                      if (fromController.text.isNotEmpty &&
+                          toController.text.isNotEmpty) {
+                        print(fromController.text);
+                        print(toController.text);
+                      }
+                    });
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

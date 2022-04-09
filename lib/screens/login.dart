@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:web_routing_app/routing/fluro_router.dart';
 import 'package:web_routing_app/utils/auth.dart';
@@ -73,8 +74,8 @@ class _LoginScreenState extends State<LoginScreen> {
               decoration: BoxDecoration(
                   color: Colors.white.withOpacity(.3),
                   borderRadius: BorderRadius.circular(20)),
-              width: size.width * .28,
-              height: size.height * .6,
+              width: 370,
+              height: 430,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
