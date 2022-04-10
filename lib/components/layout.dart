@@ -20,7 +20,7 @@ class _NavLayoutState extends State<NavLayout> {
     {"title": "Dashboard", "width": 5, "url": "/dashboard"},
     {"title": "Users", "width": 0, "url":"/users"},
     {"title": "Challenges", "width": 0 ,"url":"/challenges"},
-    {"title": "Settings", "width": 0},
+    {"title": "Settings", "width": 0, "url":"/settings"},
     {"title": "Store", "width": 0, "url": "/store"}
   ];
 

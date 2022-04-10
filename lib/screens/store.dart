@@ -358,7 +358,7 @@ class _StoreScreenState extends State<StoreScreen> {
                                           ),
                                           Container(
                                             margin: EdgeInsets.only(left: 10),
-                                            height: 50,
+                                            height: 52,
                                             child: Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
@@ -372,13 +372,9 @@ class _StoreScreenState extends State<StoreScreen> {
                                                       fontSize: 14,
                                                       color: drawerText),
                                                 ),
-                                                SizedBox(
-                                                  height: 5.h,
-                                                ),
                                                 Container(
-                                                  margin: EdgeInsets.only(
-                                                      bottom: 10),
-                                                  height: 20,
+                                                  margin: EdgeInsets.only(bottom: 15.h),
+                                                  height: 30.h,
                                                   child: ListView.builder(
                                                     shrinkWrap: true,
                                                     scrollDirection:

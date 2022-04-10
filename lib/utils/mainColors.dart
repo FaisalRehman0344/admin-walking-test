@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:universal_html/html.dart';
 
 Color primaryColor = Color(0xFF5BBABC);
 MaterialStateProperty<Color> materialPrimaryColor =
     MaterialStateProperty.all(primaryColor);
 
 Color secondaryColor = Color(0xFF004344);
+Color secondaryTextColor = Color(0xFFBCBCBC);
 
 Color borderColor = Color(0xFF0D917F);
 

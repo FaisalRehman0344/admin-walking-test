@@ -209,7 +209,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Visibility(
                 visible: title == "USERS",
                 child: Container(
-                  height: 30,
+                  height: 40,
                   margin: EdgeInsets.only(left: 20),
                   child: DropdownButton<String>(
                       items: [],
