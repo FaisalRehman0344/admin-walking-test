@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:web_routing_app/components/layout.dart';
@@ -12,34 +13,78 @@ class StoreScreen extends StatefulWidget {
 }
 
 class _StoreScreenState extends State<StoreScreen> {
+  bool isUpdate = false;
+  String updateId = "";
+  bool isLoading = false;
   bool showView = false;
   var emailKey = GlobalKey<FormState>();
   var passwordKey = GlobalKey<FormState>();
   bool showForm = false;
   String? email, password;
 
-  List data = [
-    {
-      "email": "Reebok@gmail.com",
-      "password": "abc123456789",
-    }
-  ];
-
-  List cardData = [
-    {"name": "ProductName", "rating": 5, "price": 500},
-    {"name": "ProductName", "rating": 5, "price": 500}
-  ];
+  List data = [];
+  List products = [];
 
   void addEmail() {
     if (email == null || password == null) {
       showToast("Please enter email and password");
     } else {
       setState(() {
-        data.add({"email": email, "password": password});
+        isLoading = true;
+      });
+      CollectionReference store =
+          FirebaseFirestore.instance.collection("Store");
+      if (isUpdate) {
+        store.doc(updateId).update({"email": email, "password": password});
+        isUpdate = false;
+        updateId = "";
+      } else {
+        store.add({"email": email, "password": password, "product": null});
+      }
+      setState(() {
+        isLoading = false;
         showForm = false;
       });
-      print(data);
     }
+  }
+
+  void fetchData() {
+    print("fetching data");
+    CollectionReference store = FirebaseFirestore.instance.collection("Store");
+    List _userData = [];
+    var val;
+    setState(() {
+      isLoading = true;
+    });
+    store.snapshots().listen((event) {
+      event.docs.forEach((element) {
+        print(element.data());
+        val = element.data();
+        val!["id"] = element.id;
+        _userData.add(val);
+      });
+      setState(() {
+        data = _userData;
+        _userData = [];
+        isLoading = false;
+      });
+    });
+  }
+
+  void setProducts(String id) async {
+    DocumentSnapshot<Map<String, dynamic>> doc =
+        await FirebaseFirestore.instance.collection("Store").doc(id).get();
+        if (doc.get("product") != null)
+          products = doc.get("product");
+    setState(() {
+      showView = true;
+    });
+  }
+
+  @override
+  void initState() {
+    fetchData();
+    super.initState();
   }
 
   @override
@@ -47,183 +92,79 @@ class _StoreScreenState extends State<StoreScreen> {
     Size size = MediaQuery.of(context).size;
     return NavLayout(
       url: "/store",
-      child: Stack(
-        children: [
-          Container(
-            width: size.width * .8,
-            padding: EdgeInsets.only(top: 15, left: 15, right: 15, bottom: 10),
-            child: Column(
-              children: [
-                Container(
-                  padding: EdgeInsets.only(left: 15),
-                  decoration: BoxDecoration(
-                      color: primaryColor,
-                      borderRadius: BorderRadius.circular(10)),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Email",
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(right: 140),
-                        child: Row(
-                          children: [
-                            Text(
-                              "Password",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            SizedBox(
-                              width: 120,
-                            ),
-                            Text(
-                              "View",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
+      child: Visibility(
+        visible: !isLoading,
+        replacement: Container(
+          width: size.width - 260,
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+        child: Stack(
+          children: [
+            Container(
+              width: size.width * .8,
+              padding:
+                  EdgeInsets.only(top: 15, left: 15, right: 15, bottom: 10),
+              child: Column(
+                children: [
+                  Container(
+                    padding: EdgeInsets.only(left: 15),
+                    decoration: BoxDecoration(
+                        color: primaryColor,
+                        borderRadius: BorderRadius.circular(10)),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Email",
+                          style: TextStyle(color: Colors.white),
                         ),
-                      ),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: TextButton(
-                          onPressed: () {
-                            setState(() {
-                              showForm = true;
-                            });
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 10, horizontal: 15),
-                            child: Text(
-                              "+Create",
-                              style: TextStyle(color: Colors.white),
-                            ),
+                        Container(
+                          margin: EdgeInsets.only(right: 140),
+                          child: Row(
+                            children: [
+                              Text(
+                                "Password",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              SizedBox(
+                                width: 120,
+                              ),
+                              Text(
+                                "View",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
                           ),
-                          style:
-                              ButtonStyle(backgroundColor: materialBorderColor),
                         ),
-                      )
-                    ],
-                  ),
-                ),
-                Visibility(
-                  visible: showForm,
-                  child: Container(
-                    child: Container(
-                      margin: EdgeInsets.only(top: 10),
-                      width: size.width * .8,
-                      padding: EdgeInsets.only(left: 15, top: 20, bottom: 20),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Form(
-                            key: emailKey,
-                            child: Container(
-                              width: 190,
-                              height: 35,
-                              color: Colors.white,
-                              child: TextFormField(
-                                onChanged: (value) {
-                                  setState(() {
-                                    email = value;
-                                  });
-                                },
-                                textAlignVertical: TextAlignVertical.top,
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderSide: new BorderSide(
-                                      color: Colors.white,
-                                      width: 0.0,
-                                    ),
-                                  ),
-                                ),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: TextButton(
+                            onPressed: () {
+                              setState(() {
+                                showForm = true;
+                              });
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 10, horizontal: 15),
+                              child: Text(
+                                "+Create",
+                                style: TextStyle(color: Colors.white),
                               ),
                             ),
+                            style: ButtonStyle(
+                                backgroundColor: materialBorderColor),
                           ),
-                          Container(
-                            margin: EdgeInsets.only(right: 65),
-                            child: Row(
-                              children: [
-                                Form(
-                                  key: passwordKey,
-                                  child: Container(
-                                    width: 150,
-                                    height: 35,
-                                    color: Colors.white,
-                                    child: TextFormField(
-                                      onChanged: (value) {
-                                        setState(() {
-                                          password = value;
-                                        });
-                                      },
-                                      textAlignVertical: TextAlignVertical.top,
-                                      decoration: InputDecoration(
-                                        border: OutlineInputBorder(
-                                          borderSide: new BorderSide(
-                                            color: Colors.white,
-                                            width: 1.0,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 28,
-                                ),
-                                IconButton(
-                                  onPressed: () {},
-                                  icon: Icon(
-                                    Icons.remove_red_eye,
-                                    color: Colors.black,
-                                  ),
-                                )
-                              ],
-                            ),
-                          ),
-                          Container(
-                            width: 150,
-                            margin: EdgeInsets.only(right: 170),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                TextButton(
-                                    onPressed: addEmail,
-                                    child: Text(
-                                      "Save",
-                                      style:
-                                          TextStyle(color: updateButtonColor),
-                                    )),
-                                TextButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      showForm = false;
-                                    });
-                                  },
-                                  child: Text(
-                                    "Cancel",
-                                    style: TextStyle(color: deleteButtonColor),
-                                  ),
-                                )
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                        )
+                      ],
                     ),
                   ),
-                ),
-                Container(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: data.length,
-                    itemBuilder: (context, index) {
-                      return Container(
+                  Visibility(
+                    visible: showForm,
+                    child: Container(
+                      child: Container(
                         margin: EdgeInsets.only(top: 10),
                         width: size.width * .8,
                         padding: EdgeInsets.only(left: 15, top: 20, bottom: 20),
@@ -234,34 +175,69 @@ class _StoreScreenState extends State<StoreScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Container(
-                              width: 150,
-                              child: Text(
-                                data[index]["email"],
-                                style: TextStyle(color: cardTextColor),
+                            Form(
+                              key: emailKey,
+                              child: Container(
+                                width: 190,
+                                height: 35,
+                                color: Colors.white,
+                                child: TextFormField(
+                                  onChanged: (value) {
+                                    setState(() {
+                                      email = value;
+                                    });
+                                  },
+                                  textAlignVertical: TextAlignVertical.top,
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderSide: new BorderSide(
+                                        color: Colors.white,
+                                        width: 0.0,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                             Container(
-                              margin: EdgeInsets.only(right: 25),
-                              width: 220,
+                              margin: EdgeInsets.only(right: 65),
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    data[index]["password"],
-                                    style: TextStyle(color: cardTextColor),
+                                  Form(
+                                    key: passwordKey,
+                                    child: Container(
+                                      width: 150,
+                                      height: 35,
+                                      color: Colors.white,
+                                      child: TextFormField(
+                                        onChanged: (value) {
+                                          setState(() {
+                                            password = value;
+                                          });
+                                        },
+                                        textAlignVertical:
+                                            TextAlignVertical.top,
+                                        decoration: InputDecoration(
+                                          border: OutlineInputBorder(
+                                            borderSide: new BorderSide(
+                                              color: Colors.white,
+                                              width: 1.0,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 28,
                                   ),
                                   IconButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          showView = true;
-                                        });
-                                      },
-                                      icon: Icon(
-                                        Icons.remove_red_eye,
-                                        color: Colors.black,
-                                      ))
+                                    onPressed: () {},
+                                    icon: Icon(
+                                      Icons.remove_red_eye,
+                                      color: Colors.black,
+                                    ),
+                                  )
                                 ],
                               ),
                             ),
@@ -273,16 +249,20 @@ class _StoreScreenState extends State<StoreScreen> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   TextButton(
-                                      onPressed: () {},
+                                      onPressed: addEmail,
                                       child: Text(
-                                        "Update",
+                                        "Save",
                                         style:
                                             TextStyle(color: updateButtonColor),
                                       )),
                                   TextButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      setState(() {
+                                        showForm = false;
+                                      });
+                                    },
                                     child: Text(
-                                      "Delete",
+                                      "Cancel",
                                       style:
                                           TextStyle(color: deleteButtonColor),
                                     ),
@@ -292,137 +272,227 @@ class _StoreScreenState extends State<StoreScreen> {
                             ),
                           ],
                         ),
-                      );
-                    },
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          Visibility(
-            visible: showView,
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  showView = false;
-                });
-              },
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: Container(
-                  width: size.width - 250,
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Container(
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(10),
-                              bottomLeft: Radius.circular(10)),
-                          border:
-                              Border.all(width: 1, color: Color(0xFF707070)),
-                          color: Colors.white),
-                      width: 250,
-                      height: size.height,
-                      child: Column(
-                        children: [
-                          SizedBox(
-                            height: 35.h,
+                  Container(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: data.length,
+                      itemBuilder: (context, index) {
+                        return Container(
+                          margin: EdgeInsets.only(top: 10),
+                          width: size.width * .8,
+                          padding:
+                              EdgeInsets.only(left: 15, top: 20, bottom: 20),
+                          decoration: BoxDecoration(
+                            color: cardColor,
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: cardData.length,
-                            itemBuilder: (context, index) {
-                              return Container(
-                                padding: EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  border: Border(
-                                    top: BorderSide(
-                                        color: Colors.black, width: 1),
-                                  ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                width: 150,
+                                child: Text(
+                                  data[index]["email"],
+                                  style: TextStyle(color: cardTextColor),
                                 ),
+                              ),
+                              Container(
+                                margin: EdgeInsets.only(right: 25),
+                                width: 220,
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    Container(
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            padding: EdgeInsets.all(10),
-                                            color: primaryColor,
-                                            width: 75.w,
-                                            height: 75.w,
-                                            child: Image.asset(
-                                                "assets/images/walking_logo.png"),
-                                          ),
-                                          Container(
-                                            margin: EdgeInsets.only(left: 10),
-                                            height: 52,
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                Text(
-                                                  cardData[index]["name"],
-                                                  style: TextStyle(
-                                                      fontSize: 14,
-                                                      color: drawerText),
-                                                ),
-                                                Container(
-                                                  margin: EdgeInsets.only(bottom: 15.h),
-                                                  height: 30.h,
-                                                  child: ListView.builder(
-                                                    shrinkWrap: true,
-                                                    scrollDirection:
-                                                        Axis.horizontal,
-                                                    itemCount: cardData[index]
-                                                        ["rating"],
-                                                    itemBuilder:
-                                                        (context, index) {
-                                                      return Container(
-                                                        margin: EdgeInsets.only(
-                                                            left: 2),
-                                                        child: Image.asset(
-                                                          "assets/images/rating.png",
-                                                          width: 23.w,
-                                                        ),
-                                                      );
-                                                    },
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          )
-                                        ],
-                                      ),
-                                    ),
                                     Text(
-                                      "Rs " +
-                                          cardData[index]["price"].toString() +
-                                          "/=",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          color: drawerText,
-                                          fontSize: 10),
+                                      data[index]["password"],
+                                      style: TextStyle(color: cardTextColor),
+                                    ),
+                                    IconButton(
+                                        onPressed: () =>
+                                            setProducts(data[index]["id"]),
+                                        icon: Icon(
+                                          Icons.remove_red_eye,
+                                          color: Colors.black,
+                                        ))
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                width: 150,
+                                margin: EdgeInsets.only(right: 170),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    TextButton(
+                                        onPressed: () {
+                                          isUpdate = true;
+                                          updateId = data[index]["id"];
+                                          setState(() {
+                                            showForm = true;
+                                          });
+                                        },
+                                        child: Text(
+                                          "Update",
+                                          style: TextStyle(
+                                              color: updateButtonColor),
+                                        )),
+                                    TextButton(
+                                      onPressed: () {
+                                        FirebaseFirestore.instance
+                                            .collection("Store")
+                                            .doc(data[index]["id"])
+                                            .delete();
+                                      },
+                                      child: Text(
+                                        "Delete",
+                                        style:
+                                            TextStyle(color: deleteButtonColor),
+                                      ),
                                     )
                                   ],
                                 ),
-                              );
-                            },
+                              ),
+                            ],
                           ),
-                        ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Visibility(
+              visible: showView,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    showView = false;
+                  });
+                },
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: Container(
+                    width: size.width - 250,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Container(
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(10),
+                                bottomLeft: Radius.circular(10)),
+                            border:
+                                Border.all(width: 1, color: Color(0xFF707070)),
+                            color: Colors.white),
+                        width: 250,
+                        height: size.height,
+                        child: Column(
+                          children: [
+                            SizedBox(
+                              height: 35.h,
+                            ),
+                            ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: products.length,
+                              itemBuilder: (context, index) {
+                                return Container(
+                                  padding: EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      top: BorderSide(
+                                          color: Colors.black, width: 1),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Container(
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: EdgeInsets.all(10),
+                                              color: primaryColor,
+                                              width: 75.w,
+                                              height: 75.w,
+                                              child: Image.asset(
+                                                  "assets/images/walking_logo.png"),
+                                            ),
+                                            Container(
+                                              margin: EdgeInsets.only(left: 10),
+                                              height: 52,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Text(
+                                                    products[index]["name"],
+                                                    style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: drawerText),
+                                                  ),
+                                                  Container(
+                                                    margin: EdgeInsets.only(
+                                                        bottom: 15.h),
+                                                    height: 30.h,
+                                                    child: ListView.builder(
+                                                      shrinkWrap: true,
+                                                      scrollDirection:
+                                                          Axis.horizontal,
+                                                      itemCount: products[index]
+                                                          ["rating"],
+                                                      itemBuilder:
+                                                          (context, index) {
+                                                        return Container(
+                                                          margin:
+                                                              EdgeInsets.only(
+                                                                  left: 2),
+                                                          child: Image.asset(
+                                                            "assets/images/rating.png",
+                                                            width: 23.w,
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                      Text(
+                                        "Rs " +
+                                            products[index]["price"]
+                                                .toString() +
+                                            "/=",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            color: drawerText,
+                                            fontSize: 10),
+                                      )
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

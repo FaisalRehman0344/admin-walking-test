@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -12,6 +13,8 @@ class ChallengesScreen extends StatefulWidget {
 }
 
 class _ChallengesScreenState extends State<ChallengesScreen> {
+  bool isLoding = false;
+  var formatter = NumberFormat('#,##,000');
   String? statusValue;
   String? filterValue;
   TextEditingController fromController = TextEditingController();
@@ -19,171 +22,188 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
 
   List<String> filters = ["Custom", "By Status"];
   List<String> filterStatus = ["Completed", "In Progress"];
-  List data = [
-    {
-      "challenger": "German gods",
-      "opponent": "Simply Minds",
-      "totalTime": "30 sec",
-      "coin": "50,000",
-      "status": "Completed",
-      "winner": "Challenger"
-    },
-    {
-      "challenger": "German gods",
-      "opponent": "Simply Minds",
-      "totalTime": "60 sec",
-      "coin": "50,000",
-      "status": "In Progress",
-      "winner": "--"
-    }
-  ];
+  List data = [];
+
+  void fetchData() {
+    List _userData = [];
+    setState(() {
+      isLoding = true;
+    });
+    CollectionReference users =
+        FirebaseFirestore.instance.collection("Challenges");
+    users.snapshots().listen((event) {
+      event.docs.forEach((element) {
+        _userData.add(element.data());
+      });
+      setState(() {
+        data = _userData;
+        _userData = [];
+        isLoding = false;
+      });
+    });
+  }
+
+  @override
+  void initState() {
+    fetchData();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return NavLayout(
       url: "/challenges",
-      child: Container(
-        width: size.width * .5,
-        margin: EdgeInsets.only(left: 15, top: 20),
-        child: Column(
-          children: [
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 15),
-              height: 40,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Challenger",
-                    style: TextStyle(
-                        color: drawerText,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700),
-                  ),
-                  Text(
-                    "Opponent",
-                    style: TextStyle(
-                        color: drawerText,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700),
-                  ),
-                  Text(
-                    "Total Time",
-                    style: TextStyle(
-                        color: drawerText,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700),
-                  ),
-                  Text(
-                    "Coin",
-                    style: TextStyle(
-                        color: drawerText,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700),
-                  ),
-                  Text(
-                    "Status",
-                    style: TextStyle(
-                        color: drawerText,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700),
-                  ),
-                  Text(
-                    "Winner",
-                    style: TextStyle(
-                        color: drawerText,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700),
-                  ),
-                ],
+      child: Visibility(
+        visible: !isLoding,
+        replacement: Container(
+          width: size.width - 260,
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+        child: Container(
+          width: size.width * .5,
+          margin: EdgeInsets.only(left: 15, top: 20),
+          child: Column(
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 15),
+                height: 40,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Challenger",
+                      style: TextStyle(
+                          color: drawerText,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w700),
+                    ),
+                    Text(
+                      "Opponent",
+                      style: TextStyle(
+                          color: drawerText,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w700),
+                    ),
+                    Text(
+                      "Total Time",
+                      style: TextStyle(
+                          color: drawerText,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w700),
+                    ),
+                    Text(
+                      "Coin",
+                      style: TextStyle(
+                          color: drawerText,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w700),
+                    ),
+                    Text(
+                      "Status",
+                      style: TextStyle(
+                          color: drawerText,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w700),
+                    ),
+                    Text(
+                      "Winner",
+                      style: TextStyle(
+                          color: drawerText,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            ListView.builder(
-              shrinkWrap: true,
-              itemCount: data.length,
-              itemBuilder: (context, index) {
-                return Container(
-                  padding: EdgeInsets.only(left: 15),
-                  height: 40,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        width: 120.w,
-                        child: Text(
-                          data[index]["challenger"],
-                          style: TextStyle(
-                            color: drawerText,
-                            fontSize: 16.sp,
+              ListView.builder(
+                shrinkWrap: true,
+                itemCount: data.length,
+                itemBuilder: (context, index) {
+                  return Container(
+                    padding: EdgeInsets.only(left: 15),
+                    height: 40,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          width: 120.w,
+                          child: Text(
+                            data[index]["challenger"],
+                            style: TextStyle(
+                              color: drawerText,
+                              fontSize: 16.sp,
+                            ),
                           ),
                         ),
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(left: 26),
-                        width: 120.w,
-                        child: Text(
-                          data[index]["opponent"],
-                          style: TextStyle(
-                            color: drawerText,
-                            fontSize: 16.sp,
+                        Container(
+                          margin: EdgeInsets.only(left: 26),
+                          width: 120.w,
+                          child: Text(
+                            data[index]["opponent"],
+                            style: TextStyle(
+                              color: drawerText,
+                              fontSize: 16.sp,
+                            ),
                           ),
                         ),
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(left: 27),
-                        alignment: Alignment.center,
-                        width: 60.w,
-                        child: Text(
-                          data[index]["totalTime"],
-                          style: TextStyle(
-                            color: drawerText,
-                            fontSize: 16.sp,
+                        Container(
+                          margin: EdgeInsets.only(left: 27),
+                          alignment: Alignment.center,
+                          width: 60.w,
+                          child: Text(
+                            data[index]["totalTime"],
+                            style: TextStyle(
+                              color: drawerText,
+                              fontSize: 16.sp,
+                            ),
                           ),
                         ),
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(left: 50),
-                        alignment: Alignment.center,
-                        width: 70.w,
-                        child: Text(
-                          data[index]["coin"],
-                          style: TextStyle(
-                            color: drawerText,
-                            fontSize: 16.sp,
+                        Container(
+                          margin: EdgeInsets.only(left: 50),
+                          alignment: Alignment.center,
+                          width: 70.w,
+                          child: Text(
+                            formatter.format(data[index]["coin"]),
+                            style: TextStyle(
+                              color: drawerText,
+                              fontSize: 16.sp,
+                            ),
                           ),
                         ),
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(left: 30),
-                        alignment: Alignment.center,
-                        width: 100.w,
-                        child: Text(
-                          data[index]["status"],
-                          style: TextStyle(
-                            color: drawerText,
-                            fontSize: 16.sp,
+                        Container(
+                          margin: EdgeInsets.only(left: 30),
+                          alignment: Alignment.center,
+                          width: 100.w,
+                          child: Text(
+                            data[index]["status"],
+                            style: TextStyle(
+                              color: drawerText,
+                              fontSize: 16.sp,
+                            ),
                           ),
                         ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.only(left: 25),
-                        alignment: Alignment.center,
-                        width: 120.w,
-                        child: Text(
-                          data[index]["winner"],
-                          style: TextStyle(
-                            color: drawerText,
-                            fontSize: 16.sp,
+                        Container(
+                          padding: EdgeInsets.only(left: 25),
+                          alignment: Alignment.center,
+                          width: 120.w,
+                          child: Text(
+                            data[index]["winner"] ?? "--",
+                            style: TextStyle(
+                              color: drawerText,
+                              fontSize: 16.sp,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            )
-          ],
+                      ],
+                    ),
+                  );
+                },
+              )
+            ],
+          ),
         ),
       ),
       filterWidget: Row(

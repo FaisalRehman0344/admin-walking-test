@@ -43,12 +43,12 @@ class Flurorouter {
 
   static void routeSettings() {
     // router.define("/", handler: _homeHandlar);
-    router.define("/dashboard", handler: _dashboardHandler,);
-    router.define("/login", handler: _loginHandler);
-    router.define("/store", handler: _storeHandler);
-    router.define("/challenges", handler: _challengesHandler);
-    router.define("/users", handler: _usersHandler);
-    router.define("/settings", handler: _settingsHandler);
+    router.define("/dashboard", handler: _dashboardHandler,transitionType: TransitionType.fadeIn);
+    router.define("/login", handler: _loginHandler,transitionType: TransitionType.fadeIn);
+    router.define("/store", handler: _storeHandler,transitionType: TransitionType.fadeIn);
+    router.define("/challenges", handler: _challengesHandler,transitionType: TransitionType.fadeIn);
+    router.define("/users", handler: _usersHandler,transitionType: TransitionType.fadeIn);
+    router.define("/settings", handler: _settingsHandler,transitionType: TransitionType.fadeIn);
 
     //Handler for unknown route
     router.notFoundHandler = Handler(

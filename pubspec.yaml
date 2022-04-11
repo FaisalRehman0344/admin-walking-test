@@ -43,6 +43,8 @@ dependencies:
   fluttertoast: ^8.0.9
   intl: ^0.17.0
   flutter_screenutil: ^5.3.1
+  cloud_firestore: ^3.1.11
+  cloud_firestore_web: ^2.6.11
 
 dev_dependencies:
   flutter_test:

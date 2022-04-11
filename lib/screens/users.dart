@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -12,6 +15,8 @@ class UsersScreen extends StatefulWidget {
 }
 
 class _UsersScreenState extends State<UsersScreen> {
+  bool isLoading = false;
+  var formatter = NumberFormat('###,000');
   String? statusValue;
   String? filterValue;
   TextEditingController fromController = TextEditingController();
@@ -59,316 +64,380 @@ class _UsersScreenState extends State<UsersScreen> {
     }
   ];
 
-  List data = [
-    {
-      "fullName": "Faisal Rehman",
-      "country": "Pakistan",
-      "city": "Karachi",
-      "email": "faisalarain737@gmail.com",
-      "chartNo": "23",
-      "level": "5",
-      "totalSteps": "103,000",
-      "status": true
-    },
-    {
-      "fullName": "xxxxxxxxxxx",
-      "country": "Pakistan",
-      "city": "Karachi",
-      "email": "xxxxxxxxxxxxxxxxxx",
-      "chartNo": "23",
-      "level": "5",
-      "totalSteps": "103,000",
-      "status": true
-    },
-    {
-      "fullName": "xxxxxxxxxxx",
-      "country": "Pakistan",
-      "city": "Karachi",
-      "email": "xxxxxxxxxxxxxxxxxx",
-      "chartNo": "23",
-      "level": "5",
-      "totalSteps": "103,000",
-      "status": true
-    }
-  ];
+  List data = [];
+
+  var userStats = {
+    "win": 25,
+    "loose": 10,
+    "coin": 2633,
+    "usd": 23,
+    "follower": 440
+  };
 
   List cardData = [
-    {"title": "Win", "img": "assets/images/happy.png", "value": 25},
-    {"title": "Loose", "img": "assets/images/sad.png", "value": 10},
-    {"title": "Coin", "img": "assets/images/coins.png", "value": 2633},
-    {"title": "USD", "img": "assets/images/dollars.png", "value": 23},
-    {"title": "Follower", "img": "assets/images/people.png", "value": 440},
+    {"title": "Win", "img": "assets/images/happy.png"},
+    {"title": "Loose", "img": "assets/images/sad.png"},
+    {"title": "Coin", "img": "assets/images/coins.png"},
+    {"title": "USD", "img": "assets/images/dollars.png"},
+    {"title": "Follower", "img": "assets/images/people.png"},
   ];
+
+  void setUserStats(var user) {
+    setState(() {
+      userStats["win"] = user["win"];
+      userStats["loose"] = user["loose"];
+      userStats["coin"] = user["coin"];
+      userStats["usd"] = user["usd"];
+      userStats["follower"] = user["follower"];
+      showView = true;
+    });
+  }
+
+  void fetchData() {
+    List _userData = [];
+    var val;
+    setState(() {
+      isLoading = true;
+    });
+    CollectionReference users = FirebaseFirestore.instance.collection("Users");
+    users.snapshots().listen((event) {
+      event.docs.forEach((element) {
+        val = element.data();
+        val!["id"] = element.id;
+        _userData.add(val);
+      });
+      setState(() {
+        data = _userData;
+        _userData = [];
+        isLoading = false;
+      });
+    });
+  }
+
+  void changeUserStatus(var obj) {
+    CollectionReference users = FirebaseFirestore.instance.collection("Users");
+    obj["status"] = !obj["status"];
+    users.doc(obj["id"]).update(obj);
+  }
+
+  @override
+  void initState() {
+    fetchData();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return NavLayout(
       url: "/users",
-      child: Stack(
-        children: [
-          Container(
-            margin: EdgeInsets.only(left: 25.w, top: 40.h),
-            width: 0.75.sw,
-            child: Column(
-              children: [
-                Container(
-                  width: 0.75.sw,
-                  height: 50.h,
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    scrollDirection: Axis.horizontal,
-                    itemCount: columns.length,
-                    itemBuilder: (context, index) {
-                      return Container(
-                        margin: EdgeInsets.only(right: columns[index]["gap"]),
-                        child: Text(
-                          columns[index]["title"],
-                          style: TextStyle(
-                            color: drawerText,
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                Container(
-                  width: 0.75.sw,
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: data.length,
-                    itemBuilder: (context, index) {
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            margin: EdgeInsets.only(right: 102.w),
-                            child: MouseRegion(
-                              cursor: SystemMouseCursors.click,
-                              child: GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      showView = true;
-                                    });
-                                  },
-                                  child: Icon(
-                                    Icons.remove_red_eye,
-                                    size: 33.w,
-                                    color: cardTextColor,
-                                  )),
-                            ),
-                          ),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            width: 100.w,
-                            height: 50.h,
-                            margin: EdgeInsets.only(right: 100.w),
-                            child: Text(
-                              data[index]["fullName"],
-                              style: TextStyle(
-                                color: drawerText,
-                                fontSize: 16.sp,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            width: 100.w,
-                            height: 50.h,
-                            margin: EdgeInsets.only(right: 55.w),
-                            child: Text(
-                              data[index]["country"],
-                              style: TextStyle(
-                                color: drawerText,
-                                fontSize: 16.sp,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            width: 100.w,
-                            height: 50.h,
-                            margin: EdgeInsets.only(right: 28.w),
-                            child: Text(
-                              data[index]["city"],
-                              style: TextStyle(
-                                color: drawerText,
-                                fontSize: 16.sp,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            width: 200.w,
-                            height: 50.h,
-                            margin: EdgeInsets.only(right: 20.w),
-                            child: Text(
-                              data[index]["email"],
-                              style: TextStyle(
-                                color: drawerText,
-                                fontSize: 16.sp,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            width: 100.w,
-                            height: 50.h,
-                            margin: EdgeInsets.only(right: 55.w),
-                            child: Text(
-                              data[index]["chartNo"],
-                              style: TextStyle(
-                                color: drawerText,
-                                fontSize: 16.sp,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            width: 100.w,
-                            height: 50.h,
-                            margin: EdgeInsets.only(right: 33.w),
-                            child: Text(
-                              data[index]["level"],
-                              style: TextStyle(
-                                color: drawerText,
-                                fontSize: 16.sp,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            width: 100.w,
-                            height: 50.h,
-                            margin: EdgeInsets.only(right: 70.w),
-                            child: Text(
-                              data[index]["totalSteps"],
-                              style: TextStyle(
-                                color: drawerText,
-                                fontSize: 16.sp,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            width: 100.w,
-                            height: 50.h,
-                            child: Switch(
-                              value: data[index]["status"],
-                              onChanged: (val) {
-                                setState(
-                                  () {
-                                    data[index]["status"] = val;
-                                  },
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
+      child: Visibility(
+        visible: !isLoading,
+        replacement: Container(
+          width: size.width - 260,
+          child: Center(
+            child: CircularProgressIndicator(),
           ),
-          Visibility(
-            visible: showView,
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  showView = false;
-                });
-              },
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: Container(
-                  width: size.width - 250,
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Container(
-                      padding: EdgeInsets.only(left: 20.w, top: 110.26.h),
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(10),
-                              bottomLeft: Radius.circular(10)),
-                          border:
-                              Border.all(width: 1, color: Color(0xFF707070)),
-                          color: Colors.white),
-                      width: 250,
-                      height: size.height,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 60.w,
-                            height: 550.h,
-                            child: ListView.builder(
-                              shrinkWrap: true,
-                              scrollDirection: Axis.vertical,
-                              itemCount: cardData.length,
-                              itemBuilder: (context, index) {
-                                return Container(
-                                  margin: EdgeInsets.only(bottom: 64.24.h),
-                                  child: Column(
-                                    children: [
-                                      Image.asset(
-                                        cardData[index]["img"],
-                                        width: 33.88.w,
-                                      ),
-                                      Text(
-                                        cardData[index]["title"],
-                                        style: TextStyle(
-                                          color: drawerText,
-                                          fontSize: 16.sp,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
+        ),
+        child: Stack(
+          children: [
+            Container(
+              margin: EdgeInsets.only(left: 25.w, top: 40.h),
+              width: 0.75.sw,
+              child: Column(
+                children: [
+                  Container(
+                    width: 0.75.sw,
+                    height: 50.h,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      scrollDirection: Axis.horizontal,
+                      itemCount: columns.length,
+                      itemBuilder: (context, index) {
+                        return Container(
+                          margin: EdgeInsets.only(right: columns[index]["gap"]),
+                          child: Text(
+                            columns[index]["title"],
+                            style: TextStyle(
+                              color: drawerText,
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                          Container(
-                            alignment: Alignment.center,
-                            margin: EdgeInsets.only(left: 70.w,top: 8.h),
-                            width: 60.w,
-                            height: 550.h,
-                            child: ListView.builder(
-                              shrinkWrap: true,
-                              scrollDirection: Axis.vertical,
-                              itemCount: cardData.length,
-                              itemBuilder: (context, index) {
-                                return Container(
-                                  alignment: Alignment.topCenter,
-                                  margin: EdgeInsets.only(bottom: 98.h),
-                                  child: Text(
-                                    cardData[index]["value"].toString(),
-                                    style: TextStyle(
-                                      color: drawerText,
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.bold,
+                        );
+                      },
+                    ),
+                  ),
+                  Container(
+                    width: 0.75.sw,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: data.length,
+                      itemBuilder: (context, index) {
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              alignment: Alignment.centerLeft,
+                              margin: EdgeInsets.only(right: 102.w),
+                              child: MouseRegion(
+                                cursor: SystemMouseCursors.click,
+                                child: GestureDetector(
+                                    onTap: () => setUserStats(data[index]),
+                                    child: Icon(
+                                      Icons.remove_red_eye,
+                                      size: 33.w,
+                                      color: cardTextColor,
+                                    )),
+                              ),
+                            ),
+                            Container(
+                              alignment: Alignment.centerLeft,
+                              width: 100.w,
+                              height: 50.h,
+                              margin: EdgeInsets.only(right: 100.w),
+                              child: Text(
+                                data[index]["fullName"],
+                                style: TextStyle(
+                                  color: drawerText,
+                                  fontSize: 16.sp,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              alignment: Alignment.centerLeft,
+                              width: 100.w,
+                              height: 50.h,
+                              margin: EdgeInsets.only(right: 55.w),
+                              child: Text(
+                                data[index]["country"],
+                                style: TextStyle(
+                                  color: drawerText,
+                                  fontSize: 16.sp,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              alignment: Alignment.centerLeft,
+                              width: 100.w,
+                              height: 50.h,
+                              margin: EdgeInsets.only(right: 28.w),
+                              child: Text(
+                                data[index]["city"],
+                                style: TextStyle(
+                                  color: drawerText,
+                                  fontSize: 16.sp,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              alignment: Alignment.centerLeft,
+                              width: 200.w,
+                              height: 50.h,
+                              margin: EdgeInsets.only(right: 20.w),
+                              child: Text(
+                                data[index]["email"],
+                                style: TextStyle(
+                                  color: drawerText,
+                                  fontSize: 16.sp,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              alignment: Alignment.centerLeft,
+                              width: 100.w,
+                              height: 50.h,
+                              margin: EdgeInsets.only(right: 55.w),
+                              child: Text(
+                                data[index]["chartNo"].toString(),
+                                style: TextStyle(
+                                  color: drawerText,
+                                  fontSize: 16.sp,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              alignment: Alignment.centerLeft,
+                              width: 100.w,
+                              height: 50.h,
+                              margin: EdgeInsets.only(right: 33.w),
+                              child: Text(
+                                data[index]["level"].toString(),
+                                style: TextStyle(
+                                  color: drawerText,
+                                  fontSize: 16.sp,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              alignment: Alignment.centerLeft,
+                              width: 100.w,
+                              height: 50.h,
+                              margin: EdgeInsets.only(right: 70.w),
+                              child: Text(
+                                formatter.format(data[index]["totalSteps"]),
+                                style: TextStyle(
+                                  color: drawerText,
+                                  fontSize: 16.sp,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              alignment: Alignment.centerLeft,
+                              width: 100.w,
+                              height: 50.h,
+                              child: Switch(
+                                  value: data[index]["status"],
+                                  onChanged: (val) =>
+                                      changeUserStatus(data[index])),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Visibility(
+              visible: showView,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    showView = false;
+                  });
+                },
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: Container(
+                    width: size.width - 250,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Container(
+                        padding: EdgeInsets.only(left: 20.w, top: 110.26.h),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(10),
+                                bottomLeft: Radius.circular(10)),
+                            border:
+                                Border.all(width: 1, color: Color(0xFF707070)),
+                            color: Colors.white),
+                        width: 250,
+                        height: size.height,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 60.w,
+                              height: 550.h,
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                scrollDirection: Axis.vertical,
+                                itemCount: cardData.length,
+                                itemBuilder: (context, index) {
+                                  return Container(
+                                    margin: EdgeInsets.only(bottom: 64.24.h),
+                                    child: Column(
+                                      children: [
+                                        Image.asset(
+                                          cardData[index]["img"],
+                                          width: 33.88.w,
+                                        ),
+                                        Text(
+                                          cardData[index]["title"],
+                                          style: TextStyle(
+                                            color: drawerText,
+                                            fontSize: 16.sp,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            Container(
+                              alignment: Alignment.center,
+                              margin: EdgeInsets.only(left: 70.w, top: 8.h),
+                              width: 60.w,
+                              height: 550.h,
+                              child: Column(
+                                children: [
+                                  Container(
+                                    alignment: Alignment.topCenter,
+                                    margin: EdgeInsets.only(bottom: 98.h),
+                                    child: Text(
+                                      userStats["win"].toString(),
+                                      style: TextStyle(
+                                        color: drawerText,
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
-                                );
-                              },
+                                  Container(
+                                    alignment: Alignment.topCenter,
+                                    margin: EdgeInsets.only(bottom: 98.h),
+                                    child: Text(
+                                      userStats["loose"].toString(),
+                                      style: TextStyle(
+                                        color: drawerText,
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    alignment: Alignment.topCenter,
+                                    margin: EdgeInsets.only(bottom: 98.h),
+                                    child: Text(
+                                      userStats["coin"].toString(),
+                                      style: TextStyle(
+                                        color: drawerText,
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    alignment: Alignment.topCenter,
+                                    margin: EdgeInsets.only(bottom: 98.h),
+                                    child: Text(
+                                      userStats["usd"].toString(),
+                                      style: TextStyle(
+                                        color: drawerText,
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    alignment: Alignment.topCenter,
+                                    child: Text(
+                                      userStats["follower"].toString(),
+                                      style: TextStyle(
+                                        color: drawerText,
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       filterWidget: Row(
         children: [
