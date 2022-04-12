@@ -49,7 +49,6 @@ class _StoreScreenState extends State<StoreScreen> {
   }
 
   void fetchData() {
-    print("fetching data");
     CollectionReference store = FirebaseFirestore.instance.collection("Store");
     List _userData = [];
     var val;
@@ -58,13 +57,12 @@ class _StoreScreenState extends State<StoreScreen> {
     });
     store.snapshots().listen((event) {
       event.docs.forEach((element) {
-        print(element.data());
         val = element.data();
         val!["id"] = element.id;
         _userData.add(val);
       });
       setState(() {
-        data = _userData;
+        data = _userData.reversed.toList();
         _userData = [];
         isLoading = false;
       });
@@ -74,8 +72,7 @@ class _StoreScreenState extends State<StoreScreen> {
   void setProducts(String id) async {
     DocumentSnapshot<Map<String, dynamic>> doc =
         await FirebaseFirestore.instance.collection("Store").doc(id).get();
-        if (doc.get("product") != null)
-          products = doc.get("product");
+    if (doc.get("product") != null) products = doc.get("product");
     setState(() {
       showView = true;
     });
@@ -258,6 +255,8 @@ class _StoreScreenState extends State<StoreScreen> {
                                   TextButton(
                                     onPressed: () {
                                       setState(() {
+                                        isUpdate = false;
+                                        updateId = "";
                                         showForm = false;
                                       });
                                     },

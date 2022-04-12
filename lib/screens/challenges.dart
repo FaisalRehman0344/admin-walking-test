@@ -36,7 +36,7 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
         _userData.add(element.data());
       });
       setState(() {
-        data = _userData;
+        data = _userData.reversed.toList();
         _userData = [];
         isLoding = false;
       });
