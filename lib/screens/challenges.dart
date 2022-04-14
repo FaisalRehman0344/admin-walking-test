@@ -43,6 +43,51 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
     });
   }
 
+  void fetchByStatus() {
+    List _userData = [];
+    setState(() {
+      isLoding = true;
+    });
+    CollectionReference users =
+        FirebaseFirestore.instance.collection("Challenges");
+    users.where("status", isEqualTo: statusValue).snapshots().listen((event) {
+      event.docs.forEach((element) {
+        _userData.add(element.data());
+      });
+      setState(() {
+        data = _userData.reversed.toList();
+        _userData = [];
+        isLoding = false;
+      });
+    });
+  }
+
+  void fetchByDate() {
+    if (fromController.text.isNotEmpty && toController.text.isNotEmpty) {
+      List _userData = [];
+      setState(() {
+        isLoding = true;
+      });
+      CollectionReference users =
+          FirebaseFirestore.instance.collection("Challenges");
+      users
+          .where("createdOn",
+              isGreaterThanOrEqualTo: DateTime.parse(fromController.text),
+              isLessThanOrEqualTo: DateTime.parse(toController.text))
+          .snapshots()
+          .listen((event) {
+        event.docs.forEach((element) {
+          _userData.add(element.data());
+        });
+        setState(() {
+          data = _userData.reversed.toList();
+          _userData = [];
+          isLoding = false;
+        });
+      });
+    }
+  }
+
   @override
   void initState() {
     fetchData();
@@ -297,7 +342,8 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                   onChanged: (val) => {
                         setState(() {
                           statusValue = val;
-                        })
+                        }),
+                        fetchByStatus()
                       }),
             ),
           ),
@@ -349,12 +395,8 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                         DateFormat('yyyy-MM-dd').format(pickedDate);
                     setState(() {
                       controller.text = formattedDate;
-                      if (fromController.text.isNotEmpty &&
-                          toController.text.isNotEmpty) {
-                        print(fromController.text);
-                        print(toController.text);
-                      }
                     });
+                    fetchByDate();
                   }
                 },
               ),

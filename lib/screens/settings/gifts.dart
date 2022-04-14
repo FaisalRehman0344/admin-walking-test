@@ -59,7 +59,6 @@ class _GiftsScreenState extends State<GiftsScreen> {
         if (url != null) {
           gift["image"] = url;
         }
-        print("Index ID ==========>" + updateIndex);
         gifts.doc(updateIndex).update(gift);
         isUpdate = false;
         updateIndex = "";

@@ -1,11 +1,10 @@
-import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:web_routing_app/components/layout.dart';
 import 'package:web_routing_app/utils/mainColors.dart';
+import 'package:web_routing_app/utils/toast.dart';
 
 class UsersScreen extends StatefulWidget {
   const UsersScreen({Key? key}) : super(key: key);
@@ -15,13 +14,19 @@ class UsersScreen extends StatefulWidget {
 }
 
 class _UsersScreenState extends State<UsersScreen> {
-  bool isLoading = false;
-  var formatter = NumberFormat('###,000');
-  String? statusValue;
-  String? filterValue;
+  DocumentSnapshot<Object?>? firstDocument;
+  DocumentSnapshot<Object?>? lastDocument;
   TextEditingController fromController = TextEditingController();
   TextEditingController toController = TextEditingController();
+  var formatter = NumberFormat('###,000');
   bool showView = false;
+  int pageLimit = 10;
+  String? statusValue;
+  String? filterValue;
+  bool isLoading = false;
+  int currentPage = 0;
+  bool goNext = true;
+  bool goBack = true;
 
   List<String> filters = ["By Time", "By Status"];
   List<String> filterStatus = ["Completed", "In Progress"];
@@ -100,7 +105,104 @@ class _UsersScreenState extends State<UsersScreen> {
       isLoading = true;
     });
     CollectionReference users = FirebaseFirestore.instance.collection("Users");
-    users.snapshots().listen((event) {
+    users.limit(pageLimit).snapshots().listen((event) {
+      event.docs.forEach((element) {
+        val = element.data();
+        val!["id"] = element.id;
+        _userData.add(val);
+      });
+      setState(() {
+        data = _userData.reversed.toList();
+        firstDocument = event.docChanges.first.doc;
+        lastDocument = event.docChanges.last.doc;
+        _userData = [];
+        isLoading = false;
+      });
+    });
+  }
+
+  void fetchNext() {
+    currentPage++;
+    List _userData = [];
+    var val;
+    setState(() {
+      isLoading = true;
+    });
+    CollectionReference users = FirebaseFirestore.instance.collection("Users");
+    users
+        .startAfterDocument(lastDocument!)
+        .limit(pageLimit)
+        .snapshots()
+        .listen((event) {
+      if (event.docs.isNotEmpty) {
+        event.docs.forEach((element) {
+          val = element.data();
+          val!["id"] = element.id;
+          _userData.add(val);
+        });
+        setState(() {
+          data = _userData.reversed.toList();
+          firstDocument = event.docChanges.first.doc;
+          lastDocument = event.docChanges.last.doc;
+          _userData = [];
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          data = [];
+          isLoading = false;
+        });
+      }
+    });
+  }
+
+  void fetchPrevious() {
+    currentPage--;
+    List _userData = [];
+    var val;
+    setState(() {
+      isLoading = true;
+    });
+    CollectionReference users = FirebaseFirestore.instance.collection("Users");
+    users
+        .endBeforeDocument(lastDocument!)
+        .limit(pageLimit)
+        .snapshots()
+        .listen((event) {
+      if (event.docs.isNotEmpty) {
+        event.docs.forEach((element) {
+          val = element.data();
+          val!["id"] = element.id;
+          _userData.add(val);
+        });
+        setState(() {
+          data = _userData.reversed.toList();
+          firstDocument = event.docChanges.first.doc;
+          lastDocument = event.docChanges.last.doc;
+          _userData = [];
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          data = [];
+          isLoading = false;
+        });
+      }
+    });
+  }
+
+  void fetchByStatus() {
+    List _userData = [];
+    var val;
+    setState(() {
+      isLoading = true;
+    });
+    CollectionReference users = FirebaseFirestore.instance.collection("Users");
+    users
+        .limit(pageLimit)
+        .where("status", isEqualTo: statusValue)
+        .snapshots()
+        .listen((event) {
       event.docs.forEach((element) {
         val = element.data();
         val!["id"] = element.id;
@@ -114,10 +216,42 @@ class _UsersScreenState extends State<UsersScreen> {
     });
   }
 
-  void changeUserStatus(var obj) {
+  void fetchByDate() {
+    if (fromController.text.isNotEmpty && toController.text.isNotEmpty) {
+      List _userData = [];
+      var val;
+      setState(() {
+        isLoading = true;
+      });
+      CollectionReference users =
+          FirebaseFirestore.instance.collection("Users");
+      users
+          .limit(pageLimit)
+          .where("createdOn",
+              isGreaterThanOrEqualTo: DateTime.parse(fromController.text),
+              isLessThanOrEqualTo: DateTime.parse(toController.text))
+          .snapshots()
+          .listen((event) {
+        event.docs.forEach((element) {
+          val = element.data();
+          val!["id"] = element.id;
+          _userData.add(val);
+        });
+        setState(() {
+          data = _userData;
+          _userData = [];
+          isLoading = false;
+        });
+      });
+    }
+  }
+
+  void changeUserStatus(Map<String, dynamic> obj) {
     CollectionReference users = FirebaseFirestore.instance.collection("Users");
     obj["status"] = !obj["status"];
-    users.doc(obj["id"]).update(obj);
+    String docId = obj["id"];
+    obj.remove("id");
+    users.doc(docId).update(obj);
   }
 
   @override
@@ -147,8 +281,8 @@ class _UsersScreenState extends State<UsersScreen> {
               child: Column(
                 children: [
                   Container(
-                    width: 0.75.sw,
                     height: 50.h,
+                    width: 0.75.sw,
                     child: ListView.builder(
                       shrinkWrap: true,
                       scrollDirection: Axis.horizontal,
@@ -168,134 +302,218 @@ class _UsersScreenState extends State<UsersScreen> {
                       },
                     ),
                   ),
-                  Container(
-                    width: 0.75.sw,
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: data.length,
-                      itemBuilder: (context, index) {
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      ScrollConfiguration(
+                        behavior: ScrollConfiguration.of(context)
+                            .copyWith(scrollbars: false),
+                        child: Container(
+                          width: 0.75.sw,
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: data.length,
+                            itemBuilder: (context, index) {
+                              return Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    alignment: Alignment.centerLeft,
+                                    margin: EdgeInsets.only(right: 102.w),
+                                    child: MouseRegion(
+                                      cursor: SystemMouseCursors.click,
+                                      child: GestureDetector(
+                                          onTap: () =>
+                                              setUserStats(data[index]),
+                                          child: Icon(
+                                            Icons.remove_red_eye,
+                                            size: 33.w,
+                                            color: cardTextColor,
+                                          )),
+                                    ),
+                                  ),
+                                  Container(
+                                    alignment: Alignment.centerLeft,
+                                    width: 100.w,
+                                    height: 50.h,
+                                    margin: EdgeInsets.only(right: 100.w),
+                                    child: Text(
+                                      data[index]["fullName"],
+                                      style: TextStyle(
+                                        color: drawerText,
+                                        fontSize: 16.sp,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    alignment: Alignment.centerLeft,
+                                    width: 100.w,
+                                    height: 50.h,
+                                    margin: EdgeInsets.only(right: 55.w),
+                                    child: Text(
+                                      data[index]["country"],
+                                      style: TextStyle(
+                                        color: drawerText,
+                                        fontSize: 16.sp,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    alignment: Alignment.centerLeft,
+                                    width: 100.w,
+                                    height: 50.h,
+                                    margin: EdgeInsets.only(right: 28.w),
+                                    child: Text(
+                                      data[index]["city"],
+                                      style: TextStyle(
+                                        color: drawerText,
+                                        fontSize: 16.sp,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    alignment: Alignment.centerLeft,
+                                    width: 200.w,
+                                    height: 50.h,
+                                    margin: EdgeInsets.only(right: 20.w),
+                                    child: Text(
+                                      data[index]["email"],
+                                      style: TextStyle(
+                                        color: drawerText,
+                                        fontSize: 16.sp,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    alignment: Alignment.centerLeft,
+                                    width: 100.w,
+                                    height: 50.h,
+                                    margin: EdgeInsets.only(right: 55.w),
+                                    child: Text(
+                                      data[index]["chartNo"].toString(),
+                                      style: TextStyle(
+                                        color: drawerText,
+                                        fontSize: 16.sp,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    alignment: Alignment.centerLeft,
+                                    width: 100.w,
+                                    height: 50.h,
+                                    margin: EdgeInsets.only(right: 33.w),
+                                    child: Text(
+                                      data[index]["level"].toString(),
+                                      style: TextStyle(
+                                        color: drawerText,
+                                        fontSize: 16.sp,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    alignment: Alignment.centerLeft,
+                                    width: 100.w,
+                                    height: 50.h,
+                                    margin: EdgeInsets.only(right: 70.w),
+                                    child: Text(
+                                      formatter
+                                          .format(data[index]["totalSteps"]),
+                                      style: TextStyle(
+                                        color: drawerText,
+                                        fontSize: 16.sp,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    alignment: Alignment.centerLeft,
+                                    width: 100.w,
+                                    height: 50.h,
+                                    child: Switch(
+                                        value: data[index]["status"],
+                                        onChanged: (val) =>
+                                            changeUserStatus(data[index])),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      Container(
+                        margin: EdgeInsets.only(top: 20.h),
+                        width: 200.w,
+                        height: 50.h,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Container(
-                              alignment: Alignment.centerLeft,
-                              margin: EdgeInsets.only(right: 102.w),
-                              child: MouseRegion(
-                                cursor: SystemMouseCursors.click,
-                                child: GestureDetector(
-                                    onTap: () => setUserStats(data[index]),
-                                    child: Icon(
-                                      Icons.remove_red_eye,
-                                      size: 33.w,
-                                      color: cardTextColor,
-                                    )),
+                            Text(
+                              "Page: ",
+                              style:
+                                  TextStyle(color: drawerText, fontSize: 20.sp),
+                            ),
+                            IconButton(
+                              splashColor: Colors.transparent,
+                              hoverColor: Colors.transparent,
+                              highlightColor: Colors.transparent,
+                              iconSize: 30.sp,
+                              onPressed: () async {
+                                CollectionReference users = FirebaseFirestore
+                                    .instance
+                                    .collection("Users");
+                                users
+                                    .limit(1)
+                                    .endAtDocument(firstDocument!)
+                                    .snapshots()
+                                    .listen((event) {
+                                  if (event.docChanges.isEmpty) {
+                                    fetchPrevious();
+                                  }else {
+                                  showToast("No data available");
+                                }
+                                });
+                              },
+                              icon: Icon(
+                                Icons.arrow_back_ios,
+                                color: secondaryColor,
                               ),
                             ),
-                            Container(
-                              alignment: Alignment.centerLeft,
-                              width: 100.w,
-                              height: 50.h,
-                              margin: EdgeInsets.only(right: 100.w),
-                              child: Text(
-                                data[index]["fullName"],
-                                style: TextStyle(
-                                  color: drawerText,
-                                  fontSize: 16.sp,
-                                ),
-                              ),
+                            Text(
+                              currentPage.toString(),
+                              style: TextStyle(
+                                  color: secondaryColor, fontSize: 30.sp),
                             ),
-                            Container(
-                              alignment: Alignment.centerLeft,
-                              width: 100.w,
-                              height: 50.h,
-                              margin: EdgeInsets.only(right: 55.w),
-                              child: Text(
-                                data[index]["country"],
-                                style: TextStyle(
-                                  color: drawerText,
-                                  fontSize: 16.sp,
-                                ),
+                            IconButton(
+                              splashColor: Colors.transparent,
+                              hoverColor: Colors.transparent,
+                              highlightColor: Colors.transparent,
+                              iconSize: 30.sp,
+                              onPressed: () async {
+                                CollectionReference users = FirebaseFirestore
+                                    .instance
+                                    .collection("Users");
+                                users
+                                    .startAfterDocument(lastDocument!)
+                                    .limit(1)
+                                    .snapshots()
+                                    .listen((event) {
+                                  if (event.docChanges.isNotEmpty) {
+                                    fetchNext();
+                                  } else {
+                                    showToast("No data available");
+                                  }
+                                });
+                              },
+                              icon: Icon(
+                                Icons.arrow_forward_ios,
+                                color: secondaryColor,
                               ),
-                            ),
-                            Container(
-                              alignment: Alignment.centerLeft,
-                              width: 100.w,
-                              height: 50.h,
-                              margin: EdgeInsets.only(right: 28.w),
-                              child: Text(
-                                data[index]["city"],
-                                style: TextStyle(
-                                  color: drawerText,
-                                  fontSize: 16.sp,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              alignment: Alignment.centerLeft,
-                              width: 200.w,
-                              height: 50.h,
-                              margin: EdgeInsets.only(right: 20.w),
-                              child: Text(
-                                data[index]["email"],
-                                style: TextStyle(
-                                  color: drawerText,
-                                  fontSize: 16.sp,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              alignment: Alignment.centerLeft,
-                              width: 100.w,
-                              height: 50.h,
-                              margin: EdgeInsets.only(right: 55.w),
-                              child: Text(
-                                data[index]["chartNo"].toString(),
-                                style: TextStyle(
-                                  color: drawerText,
-                                  fontSize: 16.sp,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              alignment: Alignment.centerLeft,
-                              width: 100.w,
-                              height: 50.h,
-                              margin: EdgeInsets.only(right: 33.w),
-                              child: Text(
-                                data[index]["level"].toString(),
-                                style: TextStyle(
-                                  color: drawerText,
-                                  fontSize: 16.sp,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              alignment: Alignment.centerLeft,
-                              width: 100.w,
-                              height: 50.h,
-                              margin: EdgeInsets.only(right: 70.w),
-                              child: Text(
-                                formatter.format(data[index]["totalSteps"]),
-                                style: TextStyle(
-                                  color: drawerText,
-                                  fontSize: 16.sp,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              alignment: Alignment.centerLeft,
-                              width: 100.w,
-                              height: 50.h,
-                              child: Switch(
-                                  value: data[index]["status"],
-                                  onChanged: (val) =>
-                                      changeUserStatus(data[index])),
                             ),
                           ],
-                        );
-                      },
-                    ),
+                        ),
+                      )
+                    ],
                   ),
                 ],
               ),
@@ -543,11 +761,10 @@ class _UsersScreenState extends State<UsersScreen> {
                     )
                     .toList(),
                 onChanged: (val) => {
-                  setState(
-                    () {
-                      statusValue = val;
-                    },
-                  )
+                  setState(() {
+                    statusValue = val;
+                  }),
+                  // fetchByStatus()
                 },
               ),
             ),
@@ -600,12 +817,8 @@ class _UsersScreenState extends State<UsersScreen> {
                         DateFormat('yyyy-MM-dd').format(pickedDate);
                     setState(() {
                       controller.text = formattedDate;
-                      if (fromController.text.isNotEmpty &&
-                          toController.text.isNotEmpty) {
-                        print(fromController.text);
-                        print(toController.text);
-                      }
                     });
+                    fetchByDate();
                   }
                 },
               ),
