@@ -61,6 +61,7 @@ class _GiftsScreenState extends State<GiftsScreen> {
         if (_photo != null && _photoInfo != null) {
           url = (await uploadImage(_photoInfo!, updateIndex)).toString();
         }
+        print(url);
         if (url != null) {
           gift["image"] = url;
         }
@@ -90,25 +91,21 @@ class _GiftsScreenState extends State<GiftsScreen> {
     }
   }
 
-  Future<String> uploadImage(MediaInfo info, String docId) async {
+  Future<Uri> uploadImage(MediaInfo info, String docId) async {
     String? mimeType = mime(path.basename(info.fileName!));
     final extension = extensionFromMime(mimeType!);
-    var metadata = SettableMetadata(
+    var metadata = fb.UploadMetadata(
       contentType: mimeType,
     );
 
-    Reference r =
-        FirebaseStorage.instance.ref().child("gifts/images/$docId.$extension");
-    TaskSnapshot sn = r.putData(info.data!, metadata).snapshot;
-    return sn.ref.getDownloadURL();
-    // fb.StorageReference ref = fb
-    //     .app()
-    //     .storage()
-    //     .refFromURL('gs://admin-walking-challange.appspot.com')
-    //     .child("gifts/images/$docId.$extension");
-    // fb.UploadTask uploadTask = ref.put(info.data, metadata);
-    // fb.UploadTaskSnapshot taskSnapshot = await uploadTask.future;
-    // return taskSnapshot.ref.getDownloadURL();
+    fb.StorageReference ref = fb
+        .app()
+        .storage()
+        .refFromURL('gs://admin-walking-challange.appspot.com')
+        .child("gifts/images/$docId.$extension");
+    fb.UploadTask uploadTask = ref.put(info.data, metadata);
+    fb.UploadTaskSnapshot taskSnapshot = await uploadTask.future;
+    return taskSnapshot.ref.getDownloadURL();
   }
 
   void fetchData() {
