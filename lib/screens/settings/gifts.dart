@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker_web/image_picker_web.dart';
@@ -18,6 +19,10 @@ class GiftsScreen extends StatefulWidget {
 }
 
 class _GiftsScreenState extends State<GiftsScreen> {
+  DocumentSnapshot<Object?>? firstDocument;
+  DocumentSnapshot<Object?>? lastDocument;
+  int currentPage = 0;
+  int pageLimit = 10;
   bool isLoading = false;
   bool showForm = false;
   bool isUpdate = false;
@@ -85,30 +90,35 @@ class _GiftsScreenState extends State<GiftsScreen> {
     }
   }
 
-  Future<Uri> uploadImage(MediaInfo info, String docId) async {
+  Future<String> uploadImage(MediaInfo info, String docId) async {
     String? mimeType = mime(path.basename(info.fileName!));
     final extension = extensionFromMime(mimeType!);
-    var metadata = fb.UploadMetadata(
+    var metadata = SettableMetadata(
       contentType: mimeType,
     );
-    fb.StorageReference ref = fb
-        .app()
-        .storage()
-        .refFromURL('gs://admin-walking-challange.appspot.com')
-        .child("gifts/images/$docId.$extension");
-    fb.UploadTask uploadTask = ref.put(info.data, metadata);
-    fb.UploadTaskSnapshot taskSnapshot = await uploadTask.future;
-    return taskSnapshot.ref.getDownloadURL();
+
+    Reference r =
+        FirebaseStorage.instance.ref().child("gifts/images/$docId.$extension");
+    TaskSnapshot sn = r.putData(info.data!, metadata).snapshot;
+    return sn.ref.getDownloadURL();
+    // fb.StorageReference ref = fb
+    //     .app()
+    //     .storage()
+    //     .refFromURL('gs://admin-walking-challange.appspot.com')
+    //     .child("gifts/images/$docId.$extension");
+    // fb.UploadTask uploadTask = ref.put(info.data, metadata);
+    // fb.UploadTaskSnapshot taskSnapshot = await uploadTask.future;
+    // return taskSnapshot.ref.getDownloadURL();
   }
 
   void fetchData() {
-    CollectionReference store = FirebaseFirestore.instance.collection("Gifts");
+    CollectionReference gift = FirebaseFirestore.instance.collection("Gifts");
     List _giftData = [];
     var val;
     setState(() {
       isLoading = true;
     });
-    store.snapshots().listen((event) {
+    gift.limit(pageLimit).snapshots().listen((event) {
       event.docs.forEach((element) {
         val = element.data();
         val!["id"] = element.id;
@@ -116,9 +126,81 @@ class _GiftsScreenState extends State<GiftsScreen> {
       });
       setState(() {
         data = _giftData.reversed.toList();
+        firstDocument = event.docChanges.first.doc;
+        lastDocument = event.docChanges.last.doc;
         _giftData = [];
         isLoading = false;
       });
+    });
+  }
+
+  void fetchNext() {
+    currentPage++;
+    List _userData = [];
+    var val;
+    setState(() {
+      isLoading = true;
+    });
+    CollectionReference gift = FirebaseFirestore.instance.collection("Gifts");
+    gift
+        .startAfterDocument(lastDocument!)
+        .limit(pageLimit)
+        .snapshots()
+        .listen((event) {
+      if (event.docs.isNotEmpty) {
+        event.docs.forEach((element) {
+          val = element.data();
+          val!["id"] = element.id;
+          _userData.add(val);
+        });
+        setState(() {
+          data = _userData.reversed.toList();
+          firstDocument = event.docChanges.first.doc;
+          lastDocument = event.docChanges.last.doc;
+          _userData = [];
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          data = [];
+          isLoading = false;
+        });
+      }
+    });
+  }
+
+  void fetchPrevious() {
+    currentPage--;
+    List _userData = [];
+    var val;
+    setState(() {
+      isLoading = true;
+    });
+    CollectionReference gift = FirebaseFirestore.instance.collection("Gifts");
+    gift
+        .endBeforeDocument(lastDocument!)
+        .limit(pageLimit)
+        .snapshots()
+        .listen((event) {
+      if (event.docs.isNotEmpty) {
+        event.docs.forEach((element) {
+          val = element.data();
+          val!["id"] = element.id;
+          _userData.add(val);
+        });
+        setState(() {
+          data = _userData.reversed.toList();
+          firstDocument = event.docChanges.first.doc;
+          lastDocument = event.docChanges.last.doc;
+          _userData = [];
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          data = [];
+          isLoading = false;
+        });
+      }
     });
   }
 
@@ -328,95 +410,169 @@ class _GiftsScreenState extends State<GiftsScreen> {
                 ),
               ),
             ),
-            Container(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: data.length,
-                itemBuilder: (context, index) {
-                  return Container(
-                    height: 114.h,
-                    margin: EdgeInsets.only(top: 10),
-                    width: .7.sw,
-                    padding: EdgeInsets.only(left: 15),
-                    decoration: BoxDecoration(
-                      color: cardColor,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Container(
-                          margin: EdgeInsets.only(right: 110.w),
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              border:
-                                  Border.all(width: 1.w, color: primaryColor),
-                              borderRadius: BorderRadius.circular(10)),
-                          width: 110.w,
-                          height: 91.h,
-                          child: Container(
-                            color: primaryColor,
-                            padding: EdgeInsets.all(20.sp),
-                            margin: EdgeInsets.symmetric(horizontal: 10.w),
-                            child: Center(
-                                child: Image.network(data[index]["image"])),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: data.length,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      height: 114.h,
+                      margin: EdgeInsets.only(top: 10),
+                      width: .7.sw,
+                      padding: EdgeInsets.only(left: 15),
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Container(
+                            margin: EdgeInsets.only(right: 110.w),
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                border:
+                                    Border.all(width: 1.w, color: primaryColor),
+                                borderRadius: BorderRadius.circular(10)),
+                            width: 110.w,
+                            height: 91.h,
+                            child: Container(
+                              color: primaryColor,
+                              padding: EdgeInsets.all(20.sp),
+                              margin: EdgeInsets.symmetric(horizontal: 10.w),
+                              child: Center(
+                                  child: Image.network(data[index]["image"])),
+                            ),
                           ),
-                        ),
-                        Container(
-                          margin: EdgeInsets.only(right: 65.w),
-                          width: 100,
-                          child: Text(
-                            data[index]["name"].toString(),
-                            style: TextStyle(color: cardTextColor),
+                          Container(
+                            margin: EdgeInsets.only(right: 65.w),
+                            width: 100,
+                            child: Text(
+                              data[index]["name"].toString(),
+                              style: TextStyle(color: cardTextColor),
+                            ),
                           ),
-                        ),
-                        Container(
-                          margin: EdgeInsets.only(right: 380.w),
-                          width: 100,
-                          child: Text(
-                            data[index]["coins"].toString(),
-                            style: TextStyle(color: cardTextColor),
+                          Container(
+                            margin: EdgeInsets.only(right: 380.w),
+                            width: 100,
+                            child: Text(
+                              data[index]["coins"].toString(),
+                              style: TextStyle(color: cardTextColor),
+                            ),
                           ),
-                        ),
-                        Container(
-                          width: 150,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              TextButton(
+                          Container(
+                            width: 150,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                TextButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        isUpdate = true;
+                                        updateIndex = data[index]["id"];
+                                        showForm = true;
+                                      });
+                                    },
+                                    child: Text(
+                                      "Update",
+                                      style:
+                                          TextStyle(color: updateButtonColor),
+                                    )),
+                                TextButton(
                                   onPressed: () {
                                     setState(() {
-                                      isUpdate = true;
-                                      updateIndex = data[index]["id"];
-                                      showForm = true;
+                                      FirebaseFirestore.instance
+                                          .collection("Gifts")
+                                          .doc(data[index]["id"])
+                                          .delete();
                                     });
                                   },
                                   child: Text(
-                                    "Update",
-                                    style: TextStyle(color: updateButtonColor),
-                                  )),
-                              TextButton(
-                                onPressed: () {
-                                  setState(() {
-                                    FirebaseFirestore.instance
-                                        .collection("Gifts")
-                                        .doc(data[index]["id"])
-                                        .delete();
-                                  });
-                                },
-                                child: Text(
-                                  "Delete",
-                                  style: TextStyle(color: deleteButtonColor),
-                                ),
-                              )
-                            ],
+                                    "Delete",
+                                    style: TextStyle(color: deleteButtonColor),
+                                  ),
+                                )
+                              ],
+                            ),
                           ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                Container(
+                  margin: EdgeInsets.only(top: 20.h),
+                  width: 200.w,
+                  height: 50.h,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Page: ",
+                        style: TextStyle(color: drawerText, fontSize: 20.sp),
+                      ),
+                      IconButton(
+                        splashColor: Colors.transparent,
+                        hoverColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                        iconSize: 30.sp,
+                        onPressed: () async {
+                          CollectionReference gifts =
+                              FirebaseFirestore.instance.collection("Gifts");
+                          gifts
+                              .limit(1)
+                              .endAtDocument(firstDocument!)
+                              .snapshots()
+                              .listen((event) {
+                            if (event.docChanges.isEmpty) {
+                              fetchPrevious();
+                            } else {
+                              showToast("No data available");
+                            }
+                          });
+                        },
+                        icon: Icon(
+                          Icons.arrow_back_ios,
+                          color: secondaryColor,
                         ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                      ),
+                      Text(
+                        currentPage.toString(),
+                        style:
+                            TextStyle(color: secondaryColor, fontSize: 30.sp),
+                      ),
+                      IconButton(
+                        splashColor: Colors.transparent,
+                        hoverColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                        iconSize: 30.sp,
+                        onPressed: () async {
+                          CollectionReference gifts =
+                              FirebaseFirestore.instance.collection("Gifts");
+                          gifts
+                              .startAfterDocument(lastDocument!)
+                              .limit(1)
+                              .snapshots()
+                              .listen((event) {
+                            if (event.docChanges.isNotEmpty) {
+                              fetchNext();
+                            } else {
+                              showToast("No data available");
+                            }
+                          });
+                        },
+                        icon: Icon(
+                          Icons.arrow_forward_ios,
+                          color: secondaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              ],
             ),
           ],
         ),

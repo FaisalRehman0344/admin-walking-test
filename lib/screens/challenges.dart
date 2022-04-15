@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:web_routing_app/components/layout.dart';
 import 'package:web_routing_app/utils/mainColors.dart';
+import 'package:web_routing_app/utils/toast.dart';
 
 class ChallengesScreen extends StatefulWidget {
   const ChallengesScreen({Key? key}) : super(key: key);
@@ -13,6 +14,10 @@ class ChallengesScreen extends StatefulWidget {
 }
 
 class _ChallengesScreenState extends State<ChallengesScreen> {
+  DocumentSnapshot<Object?>? firstDocument;
+  DocumentSnapshot<Object?>? lastDocument;
+  int currentPage = 0;
+  int pageLimit = 10;
   bool isLoding = false;
   var formatter = NumberFormat('#,##,000');
   String? statusValue;
@@ -37,9 +42,81 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
       });
       setState(() {
         data = _userData.reversed.toList();
+        firstDocument = event.docChanges.first.doc;
+        lastDocument = event.docChanges.last.doc;
         _userData = [];
         isLoding = false;
       });
+    });
+  }
+
+  void fetchNext() {
+    currentPage++;
+    List _userData = [];
+    var val;
+    setState(() {
+      isLoding = true;
+    });
+    CollectionReference challenges = FirebaseFirestore.instance.collection("Challenges");
+    challenges
+        .startAfterDocument(lastDocument!)
+        .limit(pageLimit)
+        .snapshots()
+        .listen((event) {
+      if (event.docs.isNotEmpty) {
+        event.docs.forEach((element) {
+          val = element.data();
+          val!["id"] = element.id;
+          _userData.add(val);
+        });
+        setState(() {
+          data = _userData.reversed.toList();
+          firstDocument = event.docChanges.first.doc;
+          lastDocument = event.docChanges.last.doc;
+          _userData = [];
+          isLoding = false;
+        });
+      } else {
+        setState(() {
+          data = [];
+          isLoding = false;
+        });
+      }
+    });
+  }
+
+  void fetchPrevious() {
+    currentPage--;
+    List _userData = [];
+    var val;
+    setState(() {
+      isLoding = true;
+    });
+    CollectionReference challenges = FirebaseFirestore.instance.collection("Challenges");
+    challenges
+        .endBeforeDocument(lastDocument!)
+        .limit(pageLimit)
+        .snapshots()
+        .listen((event) {
+      if (event.docs.isNotEmpty) {
+        event.docs.forEach((element) {
+          val = element.data();
+          val!["id"] = element.id;
+          _userData.add(val);
+        });
+        setState(() {
+          data = _userData.reversed.toList();
+          firstDocument = event.docChanges.first.doc;
+          lastDocument = event.docChanges.last.doc;
+          _userData = [];
+          isLoding = false;
+        });
+      } else {
+        setState(() {
+          data = [];
+          isLoding = false;
+        });
+      }
     });
   }
 
@@ -56,6 +133,8 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
       });
       setState(() {
         data = _userData.reversed.toList();
+        firstDocument = event.docChanges.first.doc;
+        lastDocument = event.docChanges.last.doc;
         _userData = [];
         isLoding = false;
       });
@@ -81,6 +160,8 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
         });
         setState(() {
           data = _userData.reversed.toList();
+          firstDocument = event.docChanges.first.doc;
+          lastDocument = event.docChanges.last.doc;
           _userData = [];
           isLoding = false;
         });
@@ -163,89 +244,164 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                   ],
                 ),
               ),
-              ListView.builder(
-                shrinkWrap: true,
-                itemCount: data.length,
-                itemBuilder: (context, index) {
-                  return Container(
-                    padding: EdgeInsets.only(left: 15),
-                    height: 40,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: data.length,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        padding: EdgeInsets.only(left: 15),
+                        height: 40,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              width: 120.w,
+                              child: Text(
+                                data[index]["challenger"],
+                                style: TextStyle(
+                                  color: drawerText,
+                                  fontSize: 16.sp,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              margin: EdgeInsets.only(left: 26),
+                              width: 120.w,
+                              child: Text(
+                                data[index]["opponent"],
+                                style: TextStyle(
+                                  color: drawerText,
+                                  fontSize: 16.sp,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              margin: EdgeInsets.only(left: 27),
+                              alignment: Alignment.center,
+                              width: 60.w,
+                              child: Text(
+                                data[index]["totalTime"],
+                                style: TextStyle(
+                                  color: drawerText,
+                                  fontSize: 16.sp,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              margin: EdgeInsets.only(left: 50),
+                              alignment: Alignment.center,
+                              width: 70.w,
+                              child: Text(
+                                formatter.format(data[index]["coin"]),
+                                style: TextStyle(
+                                  color: drawerText,
+                                  fontSize: 16.sp,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              margin: EdgeInsets.only(left: 30),
+                              alignment: Alignment.center,
+                              width: 100.w,
+                              child: Text(
+                                data[index]["status"],
+                                style: TextStyle(
+                                  color: drawerText,
+                                  fontSize: 16.sp,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: EdgeInsets.only(left: 25),
+                              alignment: Alignment.center,
+                              width: 120.w,
+                              child: Text(
+                                data[index]["winner"] ?? "--",
+                                style: TextStyle(
+                                  color: drawerText,
+                                  fontSize: 16.sp,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(top: 20.h),
+                    width: 200.w,
+                    height: 50.h,
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Container(
-                          width: 120.w,
-                          child: Text(
-                            data[index]["challenger"],
-                            style: TextStyle(
-                              color: drawerText,
-                              fontSize: 16.sp,
-                            ),
+                        Text(
+                          "Page: ",
+                          style: TextStyle(color: drawerText, fontSize: 20.sp),
+                        ),
+                        IconButton(
+                          splashColor: Colors.transparent,
+                          hoverColor: Colors.transparent,
+                          highlightColor: Colors.transparent,
+                          iconSize: 30.sp,
+                          onPressed: () async {
+                            CollectionReference challenges =
+                                FirebaseFirestore.instance.collection("Challenges");
+                            challenges
+                                .limit(1)
+                                .endAtDocument(firstDocument!)
+                                .snapshots()
+                                .listen((event) {
+                              if (event.docChanges.isEmpty) {
+                                fetchPrevious();
+                              } else {
+                                showToast("No data available");
+                              }
+                            });
+                          },
+                          icon: Icon(
+                            Icons.arrow_back_ios,
+                            color: secondaryColor,
                           ),
                         ),
-                        Container(
-                          margin: EdgeInsets.only(left: 26),
-                          width: 120.w,
-                          child: Text(
-                            data[index]["opponent"],
-                            style: TextStyle(
-                              color: drawerText,
-                              fontSize: 16.sp,
-                            ),
-                          ),
+                        Text(
+                          currentPage.toString(),
+                          style:
+                              TextStyle(color: secondaryColor, fontSize: 30.sp),
                         ),
-                        Container(
-                          margin: EdgeInsets.only(left: 27),
-                          alignment: Alignment.center,
-                          width: 60.w,
-                          child: Text(
-                            data[index]["totalTime"],
-                            style: TextStyle(
-                              color: drawerText,
-                              fontSize: 16.sp,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          margin: EdgeInsets.only(left: 50),
-                          alignment: Alignment.center,
-                          width: 70.w,
-                          child: Text(
-                            formatter.format(data[index]["coin"]),
-                            style: TextStyle(
-                              color: drawerText,
-                              fontSize: 16.sp,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          margin: EdgeInsets.only(left: 30),
-                          alignment: Alignment.center,
-                          width: 100.w,
-                          child: Text(
-                            data[index]["status"],
-                            style: TextStyle(
-                              color: drawerText,
-                              fontSize: 16.sp,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          padding: EdgeInsets.only(left: 25),
-                          alignment: Alignment.center,
-                          width: 120.w,
-                          child: Text(
-                            data[index]["winner"] ?? "--",
-                            style: TextStyle(
-                              color: drawerText,
-                              fontSize: 16.sp,
-                            ),
+                        IconButton(
+                          splashColor: Colors.transparent,
+                          hoverColor: Colors.transparent,
+                          highlightColor: Colors.transparent,
+                          iconSize: 30.sp,
+                          onPressed: () async {
+                            CollectionReference challenges =
+                                FirebaseFirestore.instance.collection("Challenges");
+                            challenges
+                                .startAfterDocument(lastDocument!)
+                                .limit(1)
+                                .snapshots()
+                                .listen((event) {
+                              if (event.docChanges.isNotEmpty) {
+                                fetchNext();
+                              } else {
+                                showToast("No data available");
+                              }
+                            });
+                          },
+                          icon: Icon(
+                            Icons.arrow_forward_ios,
+                            color: secondaryColor,
                           ),
                         ),
                       ],
                     ),
-                  );
-                },
+                  )
+                ],
               )
             ],
           ),

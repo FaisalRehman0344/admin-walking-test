@@ -14,6 +14,10 @@ class LevelsScreen extends StatefulWidget {
 }
 
 class _LevelsScreenState extends State<LevelsScreen> {
+  DocumentSnapshot<Object?>? firstDocument;
+  DocumentSnapshot<Object?>? lastDocument;
+  int currentPage = 0;
+  int pageLimit = 10;
   var formatter = NumberFormat('###,000');
   var stepsKey = GlobalKey<FormState>();
   var coinEarnKey = GlobalKey<FormState>();
@@ -55,13 +59,13 @@ class _LevelsScreenState extends State<LevelsScreen> {
   }
 
   void fetchData() {
-    CollectionReference store = FirebaseFirestore.instance.collection("Level");
+    CollectionReference level = FirebaseFirestore.instance.collection("Level");
     List _levelData = [];
     var val;
     setState(() {
       isLoading = true;
     });
-    store.snapshots().listen((event) {
+    level.limit(pageLimit).snapshots().listen((event) {
       event.docs.forEach((element) {
         val = element.data();
         val!["id"] = element.id;
@@ -69,9 +73,81 @@ class _LevelsScreenState extends State<LevelsScreen> {
       });
       setState(() {
         data = _levelData.reversed.toList();
+        firstDocument = event.docChanges.first.doc;
+        lastDocument = event.docChanges.last.doc;
         _levelData = [];
         isLoading = false;
       });
+    });
+  }
+
+  void fetchNext() {
+    currentPage++;
+    List _userData = [];
+    var val;
+    setState(() {
+      isLoading = true;
+    });
+    CollectionReference level = FirebaseFirestore.instance.collection("Level");
+    level
+        .startAfterDocument(lastDocument!)
+        .limit(pageLimit)
+        .snapshots()
+        .listen((event) {
+      if (event.docs.isNotEmpty) {
+        event.docs.forEach((element) {
+          val = element.data();
+          val!["id"] = element.id;
+          _userData.add(val);
+        });
+        setState(() {
+          data = _userData.reversed.toList();
+          firstDocument = event.docChanges.first.doc;
+          lastDocument = event.docChanges.last.doc;
+          _userData = [];
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          data = [];
+          isLoading = false;
+        });
+      }
+    });
+  }
+
+  void fetchPrevious() {
+    currentPage--;
+    List _userData = [];
+    var val;
+    setState(() {
+      isLoading = true;
+    });
+    CollectionReference level = FirebaseFirestore.instance.collection("Level");
+    level
+        .endBeforeDocument(lastDocument!)
+        .limit(pageLimit)
+        .snapshots()
+        .listen((event) {
+      if (event.docs.isNotEmpty) {
+        event.docs.forEach((element) {
+          val = element.data();
+          val!["id"] = element.id;
+          _userData.add(val);
+        });
+        setState(() {
+          data = _userData.reversed.toList();
+          firstDocument = event.docChanges.first.doc;
+          lastDocument = event.docChanges.last.doc;
+          _userData = [];
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          data = [];
+          isLoading = false;
+        });
+      }
     });
   }
 
@@ -270,87 +346,161 @@ class _LevelsScreenState extends State<LevelsScreen> {
                 ),
               ),
             ),
-            Container(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: data.length,
-                itemBuilder: (context, index) {
-                  return Container(
-                    height: 54.h,
-                    margin: EdgeInsets.only(top: 10),
-                    width: .7.sw,
-                    padding: EdgeInsets.only(left: 15),
-                    decoration: BoxDecoration(
-                      color: cardColor,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Container(
-                          margin: EdgeInsets.only(left: 20.w, right: 68.w),
-                          width: 100,
-                          child: Text(
-                            data[index]["levelNo"].toString(),
-                            style: TextStyle(color: cardTextColor),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: data.length,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      height: 54.h,
+                      margin: EdgeInsets.only(top: 10),
+                      width: .7.sw,
+                      padding: EdgeInsets.only(left: 15),
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Container(
+                            margin: EdgeInsets.only(left: 20.w, right: 68.w),
+                            width: 100,
+                            child: Text(
+                              data[index]["levelNo"].toString(),
+                              style: TextStyle(color: cardTextColor),
+                            ),
                           ),
-                        ),
-                        Container(
-                          alignment: Alignment.center,
-                          margin: EdgeInsets.only(right: 118.w),
-                          width: 100,
-                          child: Text(
-                            formatter.format(data[index]["steps"]),
-                            style: TextStyle(color: cardTextColor),
+                          Container(
+                            alignment: Alignment.center,
+                            margin: EdgeInsets.only(right: 118.w),
+                            width: 100,
+                            child: Text(
+                              formatter.format(data[index]["steps"]),
+                              style: TextStyle(color: cardTextColor),
+                            ),
                           ),
-                        ),
-                        Container(
-                          alignment: Alignment.center,
-                          margin: EdgeInsets.only(right: 145),
-                          width: 100,
-                          child: Text(
-                            formatter.format(data[index]["coins"]),
-                            style: TextStyle(color: cardTextColor),
+                          Container(
+                            alignment: Alignment.center,
+                            margin: EdgeInsets.only(right: 145),
+                            width: 100,
+                            child: Text(
+                              formatter.format(data[index]["coins"]),
+                              style: TextStyle(color: cardTextColor),
+                            ),
                           ),
-                        ),
-                        Container(
-                          width: 150,
-                          margin: EdgeInsets.only(right: 170),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              TextButton(
+                          Container(
+                            width: 150,
+                            margin: EdgeInsets.only(right: 170),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                TextButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        isUpdate = true;
+                                        updateId = data[index]["id"];
+                                        showForm = true;
+                                      });
+                                    },
+                                    child: Text(
+                                      "Update",
+                                      style:
+                                          TextStyle(color: updateButtonColor),
+                                    )),
+                                TextButton(
                                   onPressed: () {
-                                    setState(() {
-                                      isUpdate = true;
-                                      updateId = data[index]["id"];
-                                      showForm = true;
-                                    });
+                                    FirebaseFirestore.instance
+                                        .collection("Level")
+                                        .doc(data[index]["id"])
+                                        .delete();
                                   },
                                   child: Text(
-                                    "Update",
-                                    style: TextStyle(color: updateButtonColor),
-                                  )),
-                              TextButton(
-                                onPressed: () {
-                                  FirebaseFirestore.instance
-                                      .collection("Level")
-                                      .doc(data[index]["id"])
-                                      .delete();
-                                },
-                                child: Text(
-                                  "Delete",
-                                  style: TextStyle(color: deleteButtonColor),
-                                ),
-                              )
-                            ],
+                                    "Delete",
+                                    style: TextStyle(color: deleteButtonColor),
+                                  ),
+                                )
+                              ],
+                            ),
                           ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                Container(
+                  margin: EdgeInsets.only(top: 20.h),
+                  width: 200.w,
+                  height: 50.h,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Page: ",
+                        style: TextStyle(color: drawerText, fontSize: 20.sp),
+                      ),
+                      IconButton(
+                        splashColor: Colors.transparent,
+                        hoverColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                        iconSize: 30.sp,
+                        onPressed: () async {
+                          CollectionReference level =
+                              FirebaseFirestore.instance.collection("Level");
+                          level
+                              .limit(1)
+                              .endAtDocument(firstDocument!)
+                              .snapshots()
+                              .listen((event) {
+                            if (event.docChanges.isEmpty) {
+                              fetchPrevious();
+                            } else {
+                              showToast("No data available");
+                            }
+                          });
+                        },
+                        icon: Icon(
+                          Icons.arrow_back_ios,
+                          color: secondaryColor,
                         ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                      ),
+                      Text(
+                        currentPage.toString(),
+                        style:
+                            TextStyle(color: secondaryColor, fontSize: 30.sp),
+                      ),
+                      IconButton(
+                        splashColor: Colors.transparent,
+                        hoverColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                        iconSize: 30.sp,
+                        onPressed: () async {
+                          CollectionReference level =
+                              FirebaseFirestore.instance.collection("Level");
+                          level
+                              .startAfterDocument(lastDocument!)
+                              .limit(1)
+                              .snapshots()
+                              .listen((event) {
+                            if (event.docChanges.isNotEmpty) {
+                              fetchNext();
+                            } else {
+                              showToast("No data available");
+                            }
+                          });
+                        },
+                        icon: Icon(
+                          Icons.arrow_forward_ios,
+                          color: secondaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              ],
             ),
           ],
         ),

@@ -192,6 +192,7 @@ class _UsersScreenState extends State<UsersScreen> {
   }
 
   void fetchByStatus() {
+
     List _userData = [];
     var val;
     setState(() {
@@ -305,139 +306,135 @@ class _UsersScreenState extends State<UsersScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      ScrollConfiguration(
-                        behavior: ScrollConfiguration.of(context)
-                            .copyWith(scrollbars: false),
-                        child: Container(
-                          width: 0.75.sw,
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: data.length,
-                            itemBuilder: (context, index) {
-                              return Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    alignment: Alignment.centerLeft,
-                                    margin: EdgeInsets.only(right: 102.w),
-                                    child: MouseRegion(
-                                      cursor: SystemMouseCursors.click,
-                                      child: GestureDetector(
-                                          onTap: () =>
-                                              setUserStats(data[index]),
-                                          child: Icon(
-                                            Icons.remove_red_eye,
-                                            size: 33.w,
-                                            color: cardTextColor,
-                                          )),
+                      Container(
+                        width: 0.75.sw,
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: data.length,
+                          itemBuilder: (context, index) {
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Container(
+                                  alignment: Alignment.centerLeft,
+                                  margin: EdgeInsets.only(right: 102.w),
+                                  child: MouseRegion(
+                                    cursor: SystemMouseCursors.click,
+                                    child: GestureDetector(
+                                        onTap: () =>
+                                            setUserStats(data[index]),
+                                        child: Icon(
+                                          Icons.remove_red_eye,
+                                          size: 33.w,
+                                          color: cardTextColor,
+                                        )),
+                                  ),
+                                ),
+                                Container(
+                                  alignment: Alignment.centerLeft,
+                                  width: 100.w,
+                                  height: 50.h,
+                                  margin: EdgeInsets.only(right: 100.w),
+                                  child: Text(
+                                    data[index]["fullName"],
+                                    style: TextStyle(
+                                      color: drawerText,
+                                      fontSize: 16.sp,
                                     ),
                                   ),
-                                  Container(
-                                    alignment: Alignment.centerLeft,
-                                    width: 100.w,
-                                    height: 50.h,
-                                    margin: EdgeInsets.only(right: 100.w),
-                                    child: Text(
-                                      data[index]["fullName"],
-                                      style: TextStyle(
-                                        color: drawerText,
-                                        fontSize: 16.sp,
-                                      ),
+                                ),
+                                Container(
+                                  alignment: Alignment.centerLeft,
+                                  width: 100.w,
+                                  height: 50.h,
+                                  margin: EdgeInsets.only(right: 55.w),
+                                  child: Text(
+                                    data[index]["country"],
+                                    style: TextStyle(
+                                      color: drawerText,
+                                      fontSize: 16.sp,
                                     ),
                                   ),
-                                  Container(
-                                    alignment: Alignment.centerLeft,
-                                    width: 100.w,
-                                    height: 50.h,
-                                    margin: EdgeInsets.only(right: 55.w),
-                                    child: Text(
-                                      data[index]["country"],
-                                      style: TextStyle(
-                                        color: drawerText,
-                                        fontSize: 16.sp,
-                                      ),
+                                ),
+                                Container(
+                                  alignment: Alignment.centerLeft,
+                                  width: 100.w,
+                                  height: 50.h,
+                                  margin: EdgeInsets.only(right: 28.w),
+                                  child: Text(
+                                    data[index]["city"],
+                                    style: TextStyle(
+                                      color: drawerText,
+                                      fontSize: 16.sp,
                                     ),
                                   ),
-                                  Container(
-                                    alignment: Alignment.centerLeft,
-                                    width: 100.w,
-                                    height: 50.h,
-                                    margin: EdgeInsets.only(right: 28.w),
-                                    child: Text(
-                                      data[index]["city"],
-                                      style: TextStyle(
-                                        color: drawerText,
-                                        fontSize: 16.sp,
-                                      ),
+                                ),
+                                Container(
+                                  alignment: Alignment.centerLeft,
+                                  width: 200.w,
+                                  height: 50.h,
+                                  margin: EdgeInsets.only(right: 20.w),
+                                  child: Text(
+                                    data[index]["email"],
+                                    style: TextStyle(
+                                      color: drawerText,
+                                      fontSize: 16.sp,
                                     ),
                                   ),
-                                  Container(
-                                    alignment: Alignment.centerLeft,
-                                    width: 200.w,
-                                    height: 50.h,
-                                    margin: EdgeInsets.only(right: 20.w),
-                                    child: Text(
-                                      data[index]["email"],
-                                      style: TextStyle(
-                                        color: drawerText,
-                                        fontSize: 16.sp,
-                                      ),
+                                ),
+                                Container(
+                                  alignment: Alignment.centerLeft,
+                                  width: 100.w,
+                                  height: 50.h,
+                                  margin: EdgeInsets.only(right: 55.w),
+                                  child: Text(
+                                    data[index]["chartNo"].toString(),
+                                    style: TextStyle(
+                                      color: drawerText,
+                                      fontSize: 16.sp,
                                     ),
                                   ),
-                                  Container(
-                                    alignment: Alignment.centerLeft,
-                                    width: 100.w,
-                                    height: 50.h,
-                                    margin: EdgeInsets.only(right: 55.w),
-                                    child: Text(
-                                      data[index]["chartNo"].toString(),
-                                      style: TextStyle(
-                                        color: drawerText,
-                                        fontSize: 16.sp,
-                                      ),
+                                ),
+                                Container(
+                                  alignment: Alignment.centerLeft,
+                                  width: 100.w,
+                                  height: 50.h,
+                                  margin: EdgeInsets.only(right: 33.w),
+                                  child: Text(
+                                    data[index]["level"].toString(),
+                                    style: TextStyle(
+                                      color: drawerText,
+                                      fontSize: 16.sp,
                                     ),
                                   ),
-                                  Container(
-                                    alignment: Alignment.centerLeft,
-                                    width: 100.w,
-                                    height: 50.h,
-                                    margin: EdgeInsets.only(right: 33.w),
-                                    child: Text(
-                                      data[index]["level"].toString(),
-                                      style: TextStyle(
-                                        color: drawerText,
-                                        fontSize: 16.sp,
-                                      ),
+                                ),
+                                Container(
+                                  alignment: Alignment.centerLeft,
+                                  width: 100.w,
+                                  height: 50.h,
+                                  margin: EdgeInsets.only(right: 70.w),
+                                  child: Text(
+                                    formatter
+                                        .format(data[index]["totalSteps"]),
+                                    style: TextStyle(
+                                      color: drawerText,
+                                      fontSize: 16.sp,
                                     ),
                                   ),
-                                  Container(
-                                    alignment: Alignment.centerLeft,
-                                    width: 100.w,
-                                    height: 50.h,
-                                    margin: EdgeInsets.only(right: 70.w),
-                                    child: Text(
-                                      formatter
-                                          .format(data[index]["totalSteps"]),
-                                      style: TextStyle(
-                                        color: drawerText,
-                                        fontSize: 16.sp,
-                                      ),
-                                    ),
-                                  ),
-                                  Container(
-                                    alignment: Alignment.centerLeft,
-                                    width: 100.w,
-                                    height: 50.h,
-                                    child: Switch(
-                                        value: data[index]["status"],
-                                        onChanged: (val) =>
-                                            changeUserStatus(data[index])),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
+                                ),
+                                Container(
+                                  alignment: Alignment.centerLeft,
+                                  width: 100.w,
+                                  height: 50.h,
+                                  child: Switch(
+                                      value: data[index]["status"],
+                                      onChanged: (val) =>
+                                          changeUserStatus(data[index])),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ),
                       Container(

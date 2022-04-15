@@ -13,6 +13,10 @@ class StoreScreen extends StatefulWidget {
 }
 
 class _StoreScreenState extends State<StoreScreen> {
+  DocumentSnapshot<Object?>? firstDocument;
+  DocumentSnapshot<Object?>? lastDocument;
+  int currentPage = 0;
+  int pageLimit = 10;
   bool isUpdate = false;
   String updateId = "";
   bool isLoading = false;
@@ -55,7 +59,7 @@ class _StoreScreenState extends State<StoreScreen> {
     setState(() {
       isLoading = true;
     });
-    store.snapshots().listen((event) {
+    store.limit(pageLimit).snapshots().listen((event) {
       event.docs.forEach((element) {
         val = element.data();
         val!["id"] = element.id;
@@ -63,9 +67,81 @@ class _StoreScreenState extends State<StoreScreen> {
       });
       setState(() {
         data = _userData.reversed.toList();
+        firstDocument = event.docChanges.first.doc;
+          lastDocument = event.docChanges.last.doc;
         _userData = [];
         isLoading = false;
       });
+    });
+  }
+
+  void fetchNext() {
+    currentPage++;
+    List _userData = [];
+    var val;
+    setState(() {
+      isLoading = true;
+    });
+    CollectionReference store = FirebaseFirestore.instance.collection("Store");
+    store
+        .startAfterDocument(lastDocument!)
+        .limit(pageLimit)
+        .snapshots()
+        .listen((event) {
+      if (event.docs.isNotEmpty) {
+        event.docs.forEach((element) {
+          val = element.data();
+          val!["id"] = element.id;
+          _userData.add(val);
+        });
+        setState(() {
+          data = _userData.reversed.toList();
+          firstDocument = event.docChanges.first.doc;
+          lastDocument = event.docChanges.last.doc;
+          _userData = [];
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          data = [];
+          isLoading = false;
+        });
+      }
+    });
+  }
+
+  void fetchPrevious() {
+    currentPage--;
+    List _userData = [];
+    var val;
+    setState(() {
+      isLoading = true;
+    });
+    CollectionReference store = FirebaseFirestore.instance.collection("Store");
+    store
+        .endBeforeDocument(lastDocument!)
+        .limit(pageLimit)
+        .snapshots()
+        .listen((event) {
+      if (event.docs.isNotEmpty) {
+        event.docs.forEach((element) {
+          val = element.data();
+          val!["id"] = element.id;
+          _userData.add(val);
+        });
+        setState(() {
+          data = _userData.reversed.toList();
+          firstDocument = event.docChanges.first.doc;
+          lastDocument = event.docChanges.last.doc;
+          _userData = [];
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          data = [];
+          isLoading = false;
+        });
+      }
     });
   }
 
@@ -274,92 +350,172 @@ class _StoreScreenState extends State<StoreScreen> {
                       ),
                     ),
                   ),
-                  Container(
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: data.length,
-                      itemBuilder: (context, index) {
-                        return Container(
-                          margin: EdgeInsets.only(top: 10),
-                          width: size.width * .8,
-                          padding:
-                              EdgeInsets.only(left: 15, top: 20, bottom: 20),
-                          decoration: BoxDecoration(
-                            color: cardColor,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                width: 150,
-                                child: Text(
-                                  data[index]["email"],
-                                  style: TextStyle(color: cardTextColor),
-                                ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Container(
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: data.length,
+                          itemBuilder: (context, index) {
+                            return Container(
+                              margin: EdgeInsets.only(top: 10),
+                              width: size.width * .8,
+                              padding: EdgeInsets.only(
+                                  left: 15, top: 20, bottom: 20),
+                              decoration: BoxDecoration(
+                                color: cardColor,
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              Container(
-                                margin: EdgeInsets.only(right: 25),
-                                width: 220,
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      data[index]["password"],
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Container(
+                                    width: 150,
+                                    child: Text(
+                                      data[index]["email"],
                                       style: TextStyle(color: cardTextColor),
                                     ),
-                                    IconButton(
-                                        onPressed: () =>
-                                            setProducts(data[index]["id"]),
-                                        icon: Icon(
-                                          Icons.remove_red_eye,
-                                          color: Colors.black,
-                                        ))
-                                  ],
-                                ),
+                                  ),
+                                  Container(
+                                    margin: EdgeInsets.only(right: 25),
+                                    width: 220,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          data[index]["password"],
+                                          style:
+                                              TextStyle(color: cardTextColor),
+                                        ),
+                                        IconButton(
+                                            onPressed: () =>
+                                                setProducts(data[index]["id"]),
+                                            icon: Icon(
+                                              Icons.remove_red_eye,
+                                              color: Colors.black,
+                                            ))
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    width: 150,
+                                    margin: EdgeInsets.only(right: 170),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        TextButton(
+                                            onPressed: () {
+                                              isUpdate = true;
+                                              updateId = data[index]["id"];
+                                              setState(() {
+                                                showForm = true;
+                                              });
+                                            },
+                                            child: Text(
+                                              "Update",
+                                              style: TextStyle(
+                                                  color: updateButtonColor),
+                                            )),
+                                        TextButton(
+                                          onPressed: () {
+                                            FirebaseFirestore.instance
+                                                .collection("Store")
+                                                .doc(data[index]["id"])
+                                                .delete();
+                                          },
+                                          child: Text(
+                                            "Delete",
+                                            style: TextStyle(
+                                                color: deleteButtonColor),
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Container(
-                                width: 150,
-                                margin: EdgeInsets.only(right: 170),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    TextButton(
-                                        onPressed: () {
-                                          isUpdate = true;
-                                          updateId = data[index]["id"];
-                                          setState(() {
-                                            showForm = true;
-                                          });
-                                        },
-                                        child: Text(
-                                          "Update",
-                                          style: TextStyle(
-                                              color: updateButtonColor),
-                                        )),
-                                    TextButton(
-                                      onPressed: () {
-                                        FirebaseFirestore.instance
-                                            .collection("Store")
-                                            .doc(data[index]["id"])
-                                            .delete();
-                                      },
-                                      child: Text(
-                                        "Delete",
-                                        style:
-                                            TextStyle(color: deleteButtonColor),
-                                      ),
-                                    )
-                                  ],
-                                ),
+                            );
+                          },
+                        ),
+                      ),
+                      Container(
+                        margin: EdgeInsets.only(top: 20.h),
+                        width: 200.w,
+                        height: 50.h,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Page: ",
+                              style:
+                                  TextStyle(color: drawerText, fontSize: 20.sp),
+                            ),
+                            IconButton(
+                              splashColor: Colors.transparent,
+                              hoverColor: Colors.transparent,
+                              highlightColor: Colors.transparent,
+                              iconSize: 30.sp,
+                              onPressed: () async {
+                                CollectionReference store = FirebaseFirestore
+                                    .instance
+                                    .collection("Store");
+                                store
+                                    .limit(1)
+                                    .endAtDocument(firstDocument!)
+                                    .snapshots()
+                                    .listen((event) {
+                                  if (event.docChanges.isEmpty) {
+                                    fetchPrevious();
+                                  } else {
+                                    showToast("No data available");
+                                  }
+                                });
+                              },
+                              icon: Icon(
+                                Icons.arrow_back_ios,
+                                color: secondaryColor,
                               ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+                            ),
+                            Text(
+                              currentPage.toString(),
+                              style: TextStyle(
+                                  color: secondaryColor, fontSize: 30.sp),
+                            ),
+                            IconButton(
+                              splashColor: Colors.transparent,
+                              hoverColor: Colors.transparent,
+                              highlightColor: Colors.transparent,
+                              iconSize: 30.sp,
+                              onPressed: () async {
+                                CollectionReference store = FirebaseFirestore
+                                    .instance
+                                    .collection("Store");
+                                store
+                                    .startAfterDocument(lastDocument!)
+                                    .limit(1)
+                                    .snapshots()
+                                    .listen((event) {
+                                  if (event.docChanges.isNotEmpty) {
+                                    fetchNext();
+                                  } else {
+                                    showToast("No data available");
+                                  }
+                                });
+                              },
+                              icon: Icon(
+                                Icons.arrow_forward_ios,
+                                color: secondaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
                   ),
                 ],
               ),
